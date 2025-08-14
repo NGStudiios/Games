@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>Dino Viento - Versión Móvil</title>
+<style>
+  body { margin:0; background:#eef; overflow:hidden; font-family:sans-serif; }
+  canvas { display:block; width:100vw; height:100vh; }
+  #ui {
+    position:fixed; top:8px; left:8px; background:rgba(255,255,255,0.85);
+    padding:6px 10px; border-radius:10px; font-size:16px; z-index:10;
+  }
+  #controls {
+    position:fixed; bottom:20px; left:0; right:0; display:flex;
+    justify-content:space-around; z-index:15;
+  }
+  .btn {
+    background:rgba(255,255,255,0.9); border:none; border-radius:14px;
+    padding:20px 28px; font-size:20px; font-weight:bold;
+    box-shadow:0 4px 10px rgba(0,0,0,0.2);
+    user-select:none;
+  }
+  .btn:active { background:rgba(230,230,230,0.9); }
+</style>
+</head>
+<body>
+<div id="ui">
+  🏆 <b id="best">0</b> &nbsp; 🎯 <b id="score">0</b> &nbsp; 💨 <b id="wind">0</b>
+</div>
+<div id="controls">
+  <button id="btnJump" class="btn">Saltar</button>
+  <button id="btnDuck" class="btn">Agachar</button>
+</div>
+<canvas id="game"></canvas>
+
+<script>
+(() => {
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  function resize(){ canvas.width=innerWidth; canvas.height=innerHeight; }
+  addEventListener('resize', resize, {passive:true}); resize();
+
+  const elScore = document.getElementById('score');
+  const elBest  = document.getElementById('best');
+  const elWind  = document.getElementById('wind');
+
+  // Escalado para pantallas pequeñas
+  const scale = Math.max(0.5, Math.min(1.2, canvas.width / 900));
+
+  // Dino
+  const dino = {
+    x:() => canvas.width*0.15,
+    y:0, vy:0,
+    w:46*scale, h:56*scale,
+    crouch:false, onGround:true
+  };
+
+  let score=0, best=+localStorage.getItem('bestDino')||0;
+  elBest.textContent = best;
+  let gameOver=false, t=0, baseSpeed=6, wind=0;
+
+  const groundY = () => Math.floor(canvas.height*0.78);
+  const obstacles=[];
+
+  function reset(){
+    score=0; t=0; gameOver=false; baseSpeed=6; wind=0;
+    dino.y=groundY()-dino.h; dino.vy=0; dino.onGround=true; dino.crouch=false;
+    obstacles.length=0;
+  }
+
+  function jump(){
+    if (gameOver) return;
+    if (dino.onGround){
+      dino.vy = -(12*scale) + (-wind*0.4);
+      dino.onGround=false;
+    }
+  }
+
+  function spawn(){
+    if (Math.random()<0.02){
+      const h=30*scale+Math.random()*50*scale;
+      obstacles.push({x:canvas.width, y:groundY()-h, w:20*scale, h, type:'cactus'});
+    }
+  }
+
+  function update(dt){
+    t+=dt;
+    baseSpeed=6+Math.min(6, t/8000);
+    wind = Math.sin(t*0.001)*2;
+    elWind.textContent = wind.toFixed(1);
+
+    // Física Dino
+    const grav=0.65;
+    dino.vy += grav;
+    dino.y += dino.vy;
+    if (dino.y+dino.h >= groundY()){
+      dino.y = groundY()-dino.h; dino.vy=0; dino.onGround=true;
+    }
+
+    spawn();
+
+    // Obstáculos
+    for(let i=obstacles.length-1;i>=0;i--){
+      const o=obstacles[i];
+      o.x -= baseSpeed;
+      if (o.x+o.w<0) obstacles.splice(i,1);
+      // Colisión
+      if (!gameOver && o.x < dino.x()+dino.w && o.x+o.w > dino.x() &&
+          o.y < dino.y+dino.h && o.y+o.h > dino.y){
+        gameOver=true;
+        if (score>best){ best=score; localStorage.setItem('bestDino',best); }
+        elBest.textContent=best;
+      }
+    }
+
+    if (!gameOver){
+      score++;
+      elScore.textContent=score;
+    }
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    // Suelo
+    ctx.fillStyle="#ccc";
+    ctx.fillRect(0,groundY(),canvas.width,canvas.height-groundY());
+
+    // Dino
+    ctx.fillStyle="#333";
+    ctx.fillRect(dino.x(), dino.y, dino.w, dino.h);
+
+    // Obstáculos
+    ctx.fillStyle="green";
+    for (const o of obstacles){
+      ctx.fillRect(o.x,o.y,o.w,o.h);
+    }
+
+    // Viento (líneas)
+    ctx.strokeStyle="rgba(0,0,255,0.3)";
+    for(let i=0;i<5;i++){
+      ctx.beginPath();
+      ctx.moveTo(0,(i+1)*canvas.height/6 + Math.sin(t*0.002+i)*10);
+      ctx.lineTo(canvas.width,(i+1)*canvas.height/6 + Math.sin(t*0.002+i)*10);
+      ctx.stroke();
+    }
+  }
+
+  let last=performance.now();
+  function loop(now){
+    const dt=now-last; last=now;
+    update(dt);
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  // Controles teclado
+  addEventListener('keydown',e=>{
+    if (['ArrowUp','Space'].includes(e.code)) jump();
+    if (['ArrowDown'].includes(e.code)) dino.crouch=true;
+    if (e.code==='KeyR') reset();
+  });
+  addEventListener('keyup',e=>{
+    if (['ArrowDown'].includes(e.code)) dino.crouch=false;
+  });
+
+  // Controles táctiles
+  document.getElementById('btnJump').addEventListener('touchstart',jump);
+  document.getElementById('btnDuck').addEventListener('touchstart',()=>dino.crouch=true);
+  document.getElementById('btnDuck').addEventListener('touchend',()=>dino.crouch=false);
+
+  reset();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
