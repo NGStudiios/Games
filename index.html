@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-<title>Dino Viento - Versión Móvil</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dino Viento - Móvil</title>
 <style>
   body { margin:0; background:#eef; overflow:hidden; font-family:sans-serif; }
   canvas { display:block; width:100vw; height:100vh; }
@@ -38,19 +38,17 @@
 (() => {
   const canvas = document.getElementById('game');
   const ctx = canvas.getContext('2d');
-  function resize(){ canvas.width=innerWidth; canvas.height=innerHeight; }
+  function resize(){ canvas.width = innerWidth; canvas.height = innerHeight; }
   addEventListener('resize', resize, {passive:true}); resize();
 
   const elScore = document.getElementById('score');
   const elBest  = document.getElementById('best');
   const elWind  = document.getElementById('wind');
 
-  // Escalado para pantallas pequeñas
   const scale = Math.max(0.5, Math.min(1.2, canvas.width / 900));
 
-  // Dino
   const dino = {
-    x:() => canvas.width*0.15,
+    x: () => canvas.width*0.15,
     y:0, vy:0,
     w:46*scale, h:56*scale,
     crouch:false, onGround:true
@@ -65,58 +63,66 @@
 
   function reset(){
     score=0; t=0; gameOver=false; baseSpeed=6; wind=0;
-    dino.y=groundY()-dino.h; dino.vy=0; dino.onGround=true; dino.crouch=false;
-    obstacles.length=0;
+    dino.y = groundY()-dino.h; dino.vy=0; dino.onGround=true; dino.crouch=false;
+    obstacles.length = 0;
   }
 
   function jump(){
-    if (gameOver) return;
-    if (dino.onGround){
-      dino.vy = -(12*scale) + (-wind*0.4);
+    if(gameOver) return;
+    if(dino.onGround){
+      dino.vy = -(12*scale) - wind*0.4;
       dino.onGround=false;
     }
   }
 
-  function spawn(){
-    if (Math.random()<0.02){
-      const h=30*scale+Math.random()*50*scale;
-      obstacles.push({x:canvas.width, y:groundY()-h, w:20*scale, h, type:'cactus'});
+  function spawnObstacle(){
+    if(Math.random()<0.02){
+      const h=30*scale + Math.random()*50*scale;
+      obstacles.push({
+        x: canvas.width,
+        y: groundY()-h,
+        w: 20*scale,
+        h: h,
+        type: 'cactus'
+      });
     }
   }
 
   function update(dt){
-    t+=dt;
-    baseSpeed=6+Math.min(6, t/8000);
+    t += dt;
+    baseSpeed = 6 + Math.min(6, t/8000);
     wind = Math.sin(t*0.001)*2;
     elWind.textContent = wind.toFixed(1);
 
     // Física Dino
-    const grav=0.65;
+    const grav = 0.65;
     dino.vy += grav;
     dino.y += dino.vy;
-    if (dino.y+dino.h >= groundY()){
+    if(dino.y+dino.h >= groundY()){
       dino.y = groundY()-dino.h; dino.vy=0; dino.onGround=true;
     }
 
-    spawn();
+    spawnObstacle();
 
     // Obstáculos
     for(let i=obstacles.length-1;i>=0;i--){
-      const o=obstacles[i];
-      o.x -= baseSpeed;
-      if (o.x+o.w<0) obstacles.splice(i,1);
+      const o = obstacles[i];
+      o.x -= baseSpeed + wind*0.5; // viento afecta obstáculos
+      if(o.x + o.w < 0) obstacles.splice(i,1);
+
       // Colisión
-      if (!gameOver && o.x < dino.x()+dino.w && o.x+o.w > dino.x() &&
-          o.y < dino.y+dino.h && o.y+o.h > dino.y){
-        gameOver=true;
-        if (score>best){ best=score; localStorage.setItem('bestDino',best); }
-        elBest.textContent=best;
+      const dh = dino.crouch ? dino.h*0.5 : dino.h;
+      if(!gameOver && o.x < dino.x()+dino.w && o.x+o.w > dino.x() &&
+         o.y < dino.y+dh && o.y+o.h > dino.y){
+        gameOver = true;
+        if(score>best){ best=score; localStorage.setItem('bestDino',best); }
+        elBest.textContent = best;
       }
     }
 
-    if (!gameOver){
+    if(!gameOver){
       score++;
-      elScore.textContent=score;
+      elScore.textContent = score;
     }
   }
 
@@ -128,12 +134,13 @@
 
     // Dino
     ctx.fillStyle="#333";
-    ctx.fillRect(dino.x(), dino.y, dino.w, dino.h);
+    const dh = dino.crouch ? dino.h*0.5 : dino.h;
+    ctx.fillRect(dino.x(), dino.y+dino.h-dh, dino.w, dh);
 
     // Obstáculos
     ctx.fillStyle="green";
-    for (const o of obstacles){
-      ctx.fillRect(o.x,o.y,o.w,o.h);
+    for(const o of obstacles){
+      ctx.fillRect(o.x, o.y, o.w, o.h);
     }
 
     // Viento (líneas)
@@ -146,28 +153,28 @@
     }
   }
 
-  let last=performance.now();
+  let last = performance.now();
   function loop(now){
-    const dt=now-last; last=now;
+    const dt = now - last; last = now;
     update(dt);
     draw();
     requestAnimationFrame(loop);
   }
 
-  // Controles teclado
-  addEventListener('keydown',e=>{
-    if (['ArrowUp','Space'].includes(e.code)) jump();
-    if (['ArrowDown'].includes(e.code)) dino.crouch=true;
-    if (e.code==='KeyR') reset();
+  // Teclado
+  addEventListener('keydown', e=>{
+    if(['ArrowUp','Space'].includes(e.code)) jump();
+    if(['ArrowDown'].includes(e.code)) dino.crouch=true;
+    if(e.code==='KeyR') reset();
   });
-  addEventListener('keyup',e=>{
-    if (['ArrowDown'].includes(e.code)) dino.crouch=false;
+  addEventListener('keyup', e=>{
+    if(['ArrowDown'].includes(e.code)) dino.crouch=false;
   });
 
-  // Controles táctiles
-  document.getElementById('btnJump').addEventListener('touchstart',jump);
-  document.getElementById('btnDuck').addEventListener('touchstart',()=>dino.crouch=true);
-  document.getElementById('btnDuck').addEventListener('touchend',()=>dino.crouch=false);
+  // Táctil
+  document.getElementById('btnJump').addEventListener('touchstart', jump);
+  document.getElementById('btnDuck').addEventListener('touchstart', ()=>dino.crouch=true);
+  document.getElementById('btnDuck').addEventListener('touchend', ()=>dino.crouch=false);
 
   reset();
   requestAnimationFrame(loop);
