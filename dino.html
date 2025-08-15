@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dinosaurio Prácticamente</title>
+<style>
+body {
+  margin:0;
+  font-family:'Segoe UI',sans-serif;
+  background:#87CEEB; /* cielo celeste */
+  overflow:hidden;
+}
+canvas {
+  display:block;
+  margin:0 auto;
+  background:#87CEEB;
+  border:3px solid #00e5ff;
+}
+.score {
+  color:#fff;
+  font-size:1.5em;
+  text-align:center;
+  text-shadow:0 0 5px #000;
+  margin:5px 0;
+}
+</style>
+</head>
+<body>
+<div class="score">Puntaje: <span id="score">0</span></div>
+<canvas id="gameCanvas" width="800" height="200"></canvas>
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+const dino = {
+  x: 50,
+  y: 150,
+  width: 40,
+  height: 40,
+  velocityY: 0,
+  gravity: 1,
+  jump: -15,
+  onGround: true,
+  color: '#555'
+};
+
+let obstacles = [];
+let frame = 0;
+let score = 0;
+let speed = 5;
+
+const scoreEl = document.getElementById('score');
+
+function spawnObstacle() {
+  const height = Math.floor(Math.random() * 30) + 20;
+  obstacles.push({
+    x: canvas.width,
+    y: canvas.height - height - 20,
+    width: 20,
+    height: height
+  });
+}
+
+function drawDino() {
+  ctx.fillStyle = dino.color;
+  ctx.fillRect(dino.x, dino.y, dino.width, dino.height);
+}
+
+function drawObstacles() {
+  ctx.fillStyle = '#006400';
+  obstacles.forEach(obs => {
+    ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+  });
+}
+
+function updateObstacles() {
+  if(frame % 90 === 0) spawnObstacle();
+  obstacles.forEach(obs => obs.x -= speed);
+  obstacles = obstacles.filter(obs => obs.x + obs.width > 0);
+}
+
+function checkCollisions() {
+  obstacles.forEach(obs => {
+    if(dino.x < obs.x + obs.width &&
+       dino.x + dino.width > obs.x &&
+       dino.y < obs.y + obs.height &&
+       dino.y + dino.height > obs.y){
+      resetGame();
+    }
+  });
+}
+
+function updateScore() {
+  score += 0.1;
+  scoreEl.innerText = Math.floor(score);
+  // velocidad aumenta con el tiempo
+  speed = 5 + Math.floor(score/100);
+}
+
+function resetGame() {
+  dino.y = 150;
+  dino.velocityY = 0;
+  dino.onGround = true;
+  obstacles = [];
+  frame = 0;
+  score = 0;
+  speed = 5;
+  scoreEl.innerText = score;
+}
+
+function update() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  // suelo
+  ctx.fillStyle = '#777';
+  ctx.fillRect(0, canvas.height - 20, canvas.width, 20);
+
+  // Dino
+  drawDino();
+
+  // Obstáculos
+  drawObstacles();
+  updateObstacles();
+  checkCollisions();
+  updateScore();
+
+  // física Dino
+  dino.velocityY += dino.gravity;
+  dino.y += dino.velocityY;
+
+  if(dino.y + dino.height >= canvas.height - 20){
+    dino.y = canvas.height - 20 - dino.height;
+    dino.velocityY = 0;
+    dino.onGround = true;
+  } else {
+    dino.onGround = false;
+  }
+
+  frame++;
+  requestAnimationFrame(update);
+}
+
+// controles
+function jump() {
+  if(dino.onGround){
+    dino.velocityY = dino.jump;
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if(e.code === 'Space') jump();
+});
+canvas.addEventListener('touchstart', jump);
+
+update();
+</script>
+</body>
+</html>
