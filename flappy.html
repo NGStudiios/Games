@@ -42,7 +42,7 @@ const bird = {
   height: 40,
   velocity: 0,
   gravity: 0.6,
-  lift: -7, // salto más controlado
+  lift: -7, // salto controlado
   image: new Image()
 };
 bird.image.src = 'flappy.png';
@@ -88,9 +88,10 @@ function checkCollisions() {
       }
     }
   });
-  // El personaje puede tocar el suelo y seguir cayendo
+  // Tocando el suelo: no se reinicia, no se queda estático
   if(bird.y + bird.height > canvas.height){
-    // No detener velocity, sigue cayendo si intenta saltar
+    bird.y = canvas.height - bird.height;
+    bird.velocity = 0; // se detiene momentáneamente pero puede saltar
   }
 }
 
@@ -100,7 +101,7 @@ function updateScore() {
       pipe.passed = true;
       score++;
       scoreEl.innerText = score;
-      speed = 2 + score*0.1; // velocidad aumenta progresivamente
+      speed = 2 + score*0.1; // velocidad progresiva
     }
   });
 }
@@ -130,7 +131,7 @@ function update() {
   requestAnimationFrame(update);
 }
 
-// controles
+// Controles: Space o toque en pantalla
 document.addEventListener('keydown', e => {
   if(e.code === 'Space') bird.velocity = bird.lift;
 });
