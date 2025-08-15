@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mi Game Hub</title>
+<title>NGS-Games</title>
 <style>
 body {
   margin:0;
@@ -31,30 +31,31 @@ header {
   overflow:hidden;
   box-shadow:0 0 10px rgba(0,0,0,0.7);
   transition: transform 0.2s, box-shadow 0.2s;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  text-align:center;
 }
 .card:hover {
   transform: translateY(-5px);
   box-shadow:0 10px 20px rgba(0,0,0,0.8);
 }
-.card img {
-  width:100%;
-  display:block;
+.card img.logo {
+  width:80px;
+  height:80px;
+  margin-top:15px;
 }
 .card h3 {
-  text-align:center;
-  padding:10px 0;
-  background:#111;
-  margin:0;
+  margin:10px 0;
   font-size:1.2em;
 }
 .card a {
   text-decoration:none;
   color:#00e5ff;
   display:block;
-  text-align:center;
-  padding:10px;
-  background:#111;
+  padding:10px 0;
   border-top:1px solid #00e5ff;
+  width:100%;
 }
 .card a:hover {
   background:#00e5ff;
@@ -63,30 +64,30 @@ header {
 </style>
 </head>
 <body>
-<header>Mi Game Hub</header>
+<header>NGS-Games</header>
 <div class="container">
   <div class="card">
-    <img src="tetris.png" alt="Tetris Hardcore">
+    <img class="logo" src="l-tetris.png" alt="Logo Tetris">
     <h3>Tetris Hardcore</h3>
     <a href="tetris.html">Jugar</a>
   </div>
   <div class="card">
-    <img src="dino.png" alt="Dino Viento">
-    <h3>Dino Viento</h3>
-    <a href="dino.html">Jugar</a>
-  </div>
-  <div class="card">
-    <img src="flappy.png" alt="Flappy Bird Moderno">
+    <img class="logo" src="l-flappy.png" alt="Logo Flappy Bird">
     <h3>Flappy Bird Moderno</h3>
     <a href="flappy.html">Jugar</a>
   </div>
   <div class="card">
-    <img src="fruits.png" alt="Catch the Fruits">
+    <img class="logo" src="l-dino.png" alt="Logo Dino Viento">
+    <h3>Dino Viento</h3>
+    <a href="dino.html">Jugar</a>
+  </div>
+  <div class="card">
+    <img class="logo" src="l-fruits.png" alt="Logo Catch the Fruits">
     <h3>Catch the Fruits</h3>
     <a href="fruits.html">Jugar</a>
   </div>
   <div class="card">
-    <img src="racing.png" alt="Mini Racing">
+    <img class="logo" src="l-racing.png" alt="Logo Mini Racing">
     <h3>Mini Racing</h3>
     <a href="racing.html">Jugar</a>
   </div>
