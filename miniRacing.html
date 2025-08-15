@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mini Racing</title>
+<style>
+body {
+  margin:0;
+  font-family: Arial, sans-serif;
+  background:#121212;
+  color:white;
+  text-align:center;
+}
+canvas {
+  display:block;
+  margin:auto;
+  background:#444;
+}
+#controls {
+  margin-top:10px;
+}
+button {
+  font-size:1.2em;
+  padding:10px 20px;
+  margin:5px;
+  cursor:pointer;
+  border-radius:5px;
+  border:none;
+  background:#00e5ff;
+  color:#121212;
+}
+#menu {
+  margin-top:20px;
+}
+select, input {
+  font-size:1em;
+  padding:5px;
+  margin:5px;
+}
+</style>
+</head>
+<body>
+
+<h1>Mini Racing</h1>
+
+<div id="menu">
+  <label>Vueltas: 
+    <select id="lapsSelect">
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="5">5</option>
+    </select>
+  </label>
+  <label>Color del Auto: 
+    <select id="colorSelect">
+      <option value="red">Rojo</option>
+      <option value="blue">Azul</option>
+      <option value="green">Verde</option>
+      <option value="yellow">Amarillo</option>
+    </select>
+  </label>
+  <button id="startBtn">Iniciar Carrera</button>
+</div>
+
+<canvas id="gameCanvas" width="800" height="400"></canvas>
+
+<div id="controls">
+  <button id="upBtn">⬆️ Acelerar</button>
+  <button id="leftBtn">⬅️ Izquierda</button>
+  <button id="rightBtn">➡️ Derecha</button>
+</div>
+
+<div id="info">
+  <p id="lapInfo">Vuelta: 0 / 1</p>
+  <p id="timeInfo">Tiempo: 0s</p>
+</div>
+
+<script>
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+let laps = 1;
+let selectedColor = "red";
+let currentLap = 0;
+let timeElapsed = 0;
+let gameInterval;
+
+const carWidth = 40;
+const carHeight = 60;
+
+let car = {
+  x: canvas.width/2 - carWidth/2,
+  y: canvas.height - carHeight - 10,
+  width: carWidth,
+  height: carHeight,
+  speed: 0,
+  maxSpeed: 5,
+  color: selectedColor
+};
+
+const keys = {};
+
+// Controles teclado
+document.addEventListener("keydown", e => keys[e.code] = true);
+document.addEventListener("keyup", e => keys[e.code] = false);
+
+// Controles botones
+document.getElementById("upBtn").addEventListener("mousedown", ()=> keys["ArrowUp"]=true);
+document.getElementById("upBtn").addEventListener("mouseup", ()=> keys["ArrowUp"]=false);
+document.getElementById("leftBtn").addEventListener("mousedown", ()=> keys["ArrowLeft"]=true);
+document.getElementById("leftBtn").addEventListener("mouseup", ()=> keys["ArrowLeft"]=false);
+document.getElementById("rightBtn").addEventListener("mousedown", ()=> keys["ArrowRight"]=true);
+document.getElementById("rightBtn").addEventListener("mouseup", ()=> keys["ArrowRight"]=false);
+
+// Iniciar juego
+document.getElementById("startBtn").addEventListener("click", startGame);
+
+function startGame(){
+  laps = parseInt(document.getElementById("lapsSelect").value);
+  selectedColor = document.getElementById("colorSelect").value;
+  car.color = selectedColor;
+  currentLap = 0;
+  timeElapsed = 0;
+  car.x = canvas.width/2 - car.width/2;
+  car.y = canvas.height - car.height - 10;
+  clearInterval(gameInterval);
+  gameInterval = setInterval(gameLoop, 20);
+}
+
+// Dibuja pista
+function drawTrack(){
+  ctx.fillStyle = "#555";
+  ctx.fillRect(50,50,700,300);
+  ctx.strokeStyle = "#fff";
+  ctx.lineWidth = 5;
+  ctx.strokeRect(50,50,700,300);
+}
+
+// Actualiza posición coche
+function updateCar(){
+  if(keys["ArrowUp"]){
+    car.y -= car.maxSpeed;
+    if(car.y < 50) {
+      car.y = 50;
+      currentLap++;
+      document.getElementById("lapInfo").textContent = `Vuelta: ${currentLap} / ${laps}`;
+      if(currentLap >= laps){
+        alert(`¡Carrera terminada! Tiempo: ${Math.floor(timeElapsed/50)}s`);
+        clearInterval(gameInterval);
+      }
+    }
+  }
+  if(keys["ArrowLeft"] && car.x > 50) car.x -= car.maxSpeed;
+  if(keys["ArrowRight"] && car.x + car.width < 750) car.x += car.maxSpeed;
+}
+
+// Dibuja coche
+function drawCar(){
+  ctx.fillStyle = car.color;
+  ctx.fillRect(car.x, car.y, car.width, car.height);
+}
+
+// Loop principal
+function gameLoop(){
+  timeElapsed++;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  drawTrack();
+  updateCar();
+  drawCar();
+  document.getElementById("timeInfo").textContent = `Tiempo: ${Math.floor(timeElapsed/50)}s`;
+}
+
+</script>
+</body>
+</html>
