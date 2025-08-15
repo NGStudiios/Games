@@ -6,106 +6,79 @@
 <title>NGS-Games</title>
 <style>
 body {
-  margin:0;
-  font-family:'Segoe UI',sans-serif;
-  background:#111;
-  color:#fff;
+  font-family: Arial, sans-serif;
+  background: #121212;
+  color: white;
+  text-align: center;
+  margin: 0;
+  padding: 0;
 }
 header {
-  text-align:center;
-  padding:20px;
-  background:linear-gradient(90deg,#ff0044,#ff7700);
-  color:#fff;
-  font-size:2em;
-  text-shadow:0 0 10px #000;
-}
-.notice {
-  text-align:center;
-  padding:10px 20px;
-  font-size:1em;
-  color:#ffcc00;
-  text-shadow:0 0 5px #000;
+  background: #1f1f1f;
+  padding: 20px;
+  font-size: 2em;
+  font-weight: bold;
+  color: #00e5ff;
 }
 .container {
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:20px;
-  padding:20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  padding: 20px;
 }
-.card {
-  background:#222;
-  border-radius:10px;
-  overflow:hidden;
-  box-shadow:0 0 10px rgba(0,0,0,0.7);
-  transition: transform 0.2s, box-shadow 0.2s;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  text-align:center;
+.game {
+  background: #1e1e1e;
+  border-radius: 10px;
+  padding: 15px;
+  transition: transform 0.2s ease;
 }
-.card:hover {
-  transform: translateY(-5px);
-  box-shadow:0 10px 20px rgba(0,0,0,0.8);
+.game:hover {
+  transform: scale(1.05);
+  background: #252525;
 }
-.card img.logo {
-  width:80px;
-  height:80px;
-  margin-top:15px;
+.game img {
+  width: 100%;
+  border-radius: 8px;
 }
-.card h3 {
-  margin:10px 0;
-  font-size:1.2em;
-}
-.card a {
-  text-decoration:none;
-  color:#00e5ff;
-  display:block;
-  padding:10px 0;
-  border-top:1px solid #00e5ff;
-  width:100%;
-}
-.card a:hover {
-  background:#00e5ff;
-  color:#111;
+.note {
+  margin-top: 10px;
+  font-size: 0.9em;
+  color: #bbb;
 }
 </style>
 </head>
 <body>
 <header>NGS-Games</header>
-<div class="notice">
-  Algunos de estos juegos no son originales y son copias de los reales.
+<div class="note">
+  Alguno de estos juegos no son originales y son copias de los reales.
 </div>
 <div class="container">
-  <div class="card">
-    <img class="logo" src="l-tetris.png" alt="Logo Tetris">
-    <h3>Tetris Hardcore</h3>
-    <a href="tetris.html">Jugar</a>
+  <div class="game">
+    <a href="Tetris.html"><img src="l-tetris.png" alt="Tetris"></a>
+    <p>Tetris Moderno</p>
   </div>
-  <div class="card">
-    <img class="logo" src="l-flappy.png" alt="Logo Flappy Bird">
-    <h3>Flappy Bird Moderno</h3>
-    <a href="flappy.html">Jugar</a>
+  <div class="game">
+    <a href="FlappyBird.html"><img src="l-flappy.png" alt="Flappy Bird"></a>
+    <p>Flappy Bird Moderno</p>
   </div>
-  <div class="card">
-    <img class="logo" src="l-trex.png" alt="Logo Dinosaurio Prácticamente">
-    <h3>Dinosaurio Prácticamente</h3>
-    <a href="dino.html">Jugar</a>
+  <div class="game">
+    <a href="Dino.html"><img src="l-trex.png" alt="Dino"></a>
+    <p>Dinosaurio Prácticamente</p>
   </div>
-  <div class="card">
-    <img class="logo" src="l-fruits.png" alt="Logo Catch the Fruits">
-    <h3>Catch the Fruits</h3>
-    <a href="fruits.html">Jugar</a>
-  </div>
-  <div class="card">
-    <img class="logo" src="l-racing.png" alt="Logo Mini Racing">
-    <h3>Mini Racing</h3>
-    <a href="racing.html">Jugar</a>
-  </div>
-  <div class="card">
-    <img class="logo" src="l-cabezones.png" alt="Logo Cabezones de Futbol">
-    <h3>Cabezones de Fútbol</h3>
-    <a href="cabezones.html">Jugar</a>
+  <div class="game">
+    <a href="Sudoku.html"><img src="l-sudoku.png" alt="Sudoku"></a>
+    <p>Sudoku</p>
   </div>
 </div>
+
+<!-- Compartimiento extra para Cabezones de fútbol -->
+<h2 style="margin-top:40px;">Cabezones de fútbol</h2>
+<div class="container">
+  <div class="game">
+    <a href="Cabezones.html"><img src="l-cabezones.png" alt="Cabezones"></a>
+    <p>Cabezones de Fútbol</p>
+  </div>
+</div>
+
 </body>
 </html>
