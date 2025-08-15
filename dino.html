@@ -58,7 +58,9 @@ let dino = {
   height: 60,
   vy: 0,
   isJumping: false,
-  isDucking: false
+  isDucking: false,
+  normalHeight: 60,
+  duckHeight: 30
 };
 
 // Obstáculos
@@ -70,14 +72,14 @@ meteorImg.src = "meteor.png";
 let cactuses = [];
 let meteors = [];
 
-// Control de tiempo de spawn
+// Spawn control
 let lastCactusTime = 0;
 let lastMeteorTime = 0;
 const CACTUS_INTERVAL = 1500;
 const METEOR_INTERVAL = 2000;
 const MAX_OBSTACLES = 10;
 
-// Controles
+// Controls
 const keys = {};
 document.addEventListener("keydown", e => keys[e.code] = true);
 document.addEventListener("keyup", e => keys[e.code] = false);
@@ -95,7 +97,15 @@ function jump() {
 
 function duck(state) {
   dino.isDucking = state;
-  dino.height = state ? 30 : 60;
+  if(state){
+    // Al agacharse, mantener los pies en el piso
+    dino.height = dino.duckHeight;
+    dino.y = FLOOR_Y + dino.normalHeight - dino.duckHeight;
+  } else {
+    // Al levantarse
+    dino.y = FLOOR_Y;
+    dino.height = dino.normalHeight;
+  }
 }
 
 // Colisión
@@ -106,20 +116,21 @@ function checkCollision(a,b){
          a.y + a.height > b.y;
 }
 
-// Reinicia juego
+// Reset juego
 function resetGame(){
   score = 0;
   dino.y = FLOOR_Y;
   dino.vy = 0;
   dino.isJumping = false;
   dino.isDucking = false;
+  dino.height = dino.normalHeight;
   cactuses = [];
   meteors = [];
   lastCactusTime = performance.now();
   lastMeteorTime = performance.now();
 }
 
-// Genera obstáculos
+// Spawn obstáculos
 function spawnCactus(){
   if(cactuses.length >= MAX_OBSTACLES) return;
   cactuses.push({x:canvas.width, y:FLOOR_Y, width:40, height:60});
@@ -130,15 +141,16 @@ function spawnMeteor(){
   meteors.push({x:canvas.width, y:height, width:40, height:40, speed:6});
 }
 
-// Actualiza juego
+// Update
 function update(now){
-  // Dinosaurio
+  // Controles
   if(keys["Space"]) jump();
   if(keys["ArrowDown"]) duck(true); else duck(false);
 
+  // Física dinosaurio
   dino.vy += GRAVITY;
   dino.y += dino.vy;
-  if(dino.y > FLOOR_Y){
+  if(dino.y > FLOOR_Y && !dino.isDucking){
     dino.y = FLOOR_Y;
     dino.vy = 0;
     dino.isJumping = false;
@@ -156,24 +168,25 @@ function update(now){
     lastMeteorTime = now;
   }
 
-  // Mover y colisión cactus
+  // Mover y colisiones cactus
   cactuses.forEach((c,i)=>{
     c.x -= 6;
     if(c.x + c.width < 0) cactuses.splice(i,1);
     if(checkCollision(dino,c)) resetGame();
   });
 
-  // Mover y colisión meteor
+  // Mover y colisiones meteor
   meteors.forEach((m,i)=>{
     m.x -= m.speed;
     if(m.x + m.width < 0) meteors.splice(i,1);
     if(checkCollision(dino,m)) resetGame();
   });
 
+  // Puntaje infinito
   score += 1;
 }
 
-// Dibuja
+// Draw
 function draw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
@@ -199,7 +212,7 @@ function draw(){
   // Puntaje
   ctx.fillStyle="#fff";
   ctx.font="20px Arial";
-  ctx.fillText("Score: "+score,canvas.width-120,30);
+  ctx.fillText("Score: "+score, canvas.width-120,30);
 }
 
 // Loop principal
@@ -212,5 +225,6 @@ function gameLoop(){
 
 dinoImg.onload = ()=> gameLoop();
 </script>
+
 </body>
 </html>
