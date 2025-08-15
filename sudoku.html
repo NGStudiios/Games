@@ -6,12 +6,16 @@
 <title>Sudoku NGS Games</title>
 <style>
 body {
+  margin: 0;
   font-family: Arial, sans-serif;
   display: flex;
   flex-direction: column;
   align-items: center;
   background: #222;
   color: #fff;
+}
+h1 {
+  margin-top: 10px;
 }
 #controls {
   margin: 10px;
@@ -21,14 +25,14 @@ select, button {
   padding: 5px 10px;
   margin: 5px;
 }
+#score {
+  margin: 10px;
+  font-size: 18px;
+}
 canvas {
   background: #333;
   border: 2px solid #fff;
   touch-action: none;
-}
-#score {
-  margin: 10px;
-  font-size: 18px;
 }
 </style>
 </head>
@@ -65,6 +69,7 @@ let selectedCell = null;
 let maxErrors = 3;
 let currentErrors = 0;
 
+// Número de celdas visibles por dificultad
 const difficultyLevels = {
   veryeasy: 45,
   easy: 35,
@@ -73,12 +78,12 @@ const difficultyLevels = {
   impossible: 10
 };
 
-// Generación rápida de Sudoku (placeholder simple)
+// Generador rápido de Sudoku (placeholder funcional, estable)
 function generateSudoku(level){
   solution = Array.from({length: GRID_SIZE},()=>Array(GRID_SIZE).fill(0));
   userGrid = Array.from({length: GRID_SIZE},()=>Array(GRID_SIZE).fill(0));
 
-  // rellenar diagonal de bloques
+  // Rellenar diagonal de 3x3 para tener base
   for(let block=0;block<GRID_SIZE;block+=3){
     for(let i=0;i<3;i++){
       for(let j=0;j<3;j++){
@@ -89,7 +94,7 @@ function generateSudoku(level){
     }
   }
 
-  // Borrar según dificultad
+  // Borrar números según dificultad
   let toRemove = 81 - difficultyLevels[level];
   while(toRemove>0){
     let x=Math.floor(Math.random()*9);
@@ -101,24 +106,25 @@ function generateSudoku(level){
   }
 }
 
-// Dibujar cuadrícula
+// Dibujar la cuadrícula y números
 function drawGrid(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
-  // Celdas
+
   for(let i=0;i<GRID_SIZE;i++){
     for(let j=0;j<GRID_SIZE;j++){
       let x=j*CELL_SIZE;
       let y=i*CELL_SIZE;
-      // fondo
+
+      // Fondo de celda
       ctx.fillStyle="#444";
       ctx.fillRect(x,y,CELL_SIZE,CELL_SIZE);
 
-      // borde grueso cada 3
+      // Bordes
       ctx.strokeStyle="#fff";
       ctx.lineWidth=(i%3===0||j%3===0)?2:1;
       ctx.strokeRect(x,y,CELL_SIZE,CELL_SIZE);
 
-      // número
+      // Número
       if(userGrid[i][j]!==0){
         ctx.fillStyle=solution[i][j]===userGrid[i][j]?"#fff":"#f00";
         ctx.font="24px Arial";
@@ -127,7 +133,7 @@ function drawGrid(){
         ctx.fillText(userGrid[i][j], x+CELL_SIZE/2, y+CELL_SIZE/2);
       }
 
-      // celda seleccionada
+      // Celda seleccionada
       if(selectedCell && selectedCell.x===j && selectedCell.y===i){
         ctx.strokeStyle="#0f0";
         ctx.lineWidth=3;
@@ -137,7 +143,7 @@ function drawGrid(){
   }
 }
 
-// Selección de celda
+// Selección de celda con click
 canvas.addEventListener("click",e=>{
   const rect = canvas.getBoundingClientRect();
   const x = Math.floor((e.clientX - rect.left)/CELL_SIZE);
@@ -170,6 +176,7 @@ document.addEventListener("keydown",e=>{
   drawGrid();
 });
 
+// Botón borrar
 document.getElementById("erase").addEventListener("click",()=>{
   if(selectedCell) userGrid[selectedCell.y][selectedCell.x]=0;
   drawGrid();
@@ -186,6 +193,7 @@ function startGame(){
 
 document.getElementById("newGame").addEventListener("click",startGame);
 
+// Iniciar
 startGame();
 </script>
 
