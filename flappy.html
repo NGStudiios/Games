@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flappy Bird Moderno</title>
+<style>
+body {
+  margin:0; padding:0;
+  font-family:'Segoe UI',sans-serif;
+  background:linear-gradient(#111,#333);
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+h1 {
+  color:#00e5ff;
+  text-shadow:0 0 10px #00e5ff;
+  margin:10px 0;
+}
+canvas {
+  background:#111;
+  display:block;
+  margin:0 auto;
+  border:3px solid #00e5ff;
+}
+.score {
+  color:#fff;
+  font-size:1.5em;
+  margin:10px 0;
+  text-shadow:0 0 5px #00e5ff;
+}
+</style>
+</head>
+<body>
+<h1>Flappy Bird Moderno</h1>
+<div class="score">Puntaje: <span id="score">0</span></div>
+<canvas id="game" width="400" height="600"></canvas>
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+
+let bird = { x: 80, y: 300, width: 30, height: 30, velocity: 0 };
+const gravity = 0.6;
+const jump = -10;
+let pipes = [];
+let pipeWidth = 60;
+let pipeGap = 150;
+let frame = 0;
+let score = 0;
+const scoreEl = document.getElementById('score');
+
+function resetGame() {
+  bird.y = 300; bird.velocity = 0;
+  pipes = []; frame = 0; score = 0;
+  scoreEl.innerText = score;
+}
+
+function spawnPipe() {
+  const height = Math.floor(Math.random() * 200) + 100;
+  pipes.push({ x: canvas.width, y: height });
+}
+
+function drawBird() {
+  ctx.fillStyle = '#ff0044';
+  ctx.fillRect(bird.x, bird.y, bird.width, bird.height);
+}
+
+function drawPipes() {
+  ctx.fillStyle = '#00e5ff';
+  pipes.forEach(pipe => {
+    ctx.fillRect(pipe.x, 0, pipeWidth, pipe.y);
+    ctx.fillRect(pipe.x, pipe.y + pipeGap, pipeWidth, canvas.height - pipe.y - pipeGap);
+  });
+}
+
+function update() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  // Bird physics
+  bird.velocity += gravity;
+  bird.y += bird.velocity;
+
+  drawBird();
+
+  // Pipes
+  if(frame % 90 === 0) spawnPipe();
+  pipes.forEach(pipe => pipe.x -= 3 + score*0.02); // velocidad aumenta con score
+  drawPipes();
+
+  // Collision
+  for(let pipe of pipes){
+    if(bird.x + bird.width > pipe.x && bird.x < pipe.x + pipeWidth &&
+      (bird.y < pipe.y || bird.y + bird.height > pipe.y + pipeGap)) {
+      resetGame();
+      return;
+    }
+  }
+  if(bird.y + bird.height > canvas.height || bird.y < 0){
+    resetGame();
+    return;
+  }
+
+  // Score
+  pipes.forEach(pipe => {
+    if(!pipe.passed && bird.x > pipe.x + pipeWidth){
+      pipe.passed = true;
+      score++;
+      scoreEl.innerText = score;
+    }
+  });
+
+  frame++;
+  requestAnimationFrame(update);
+}
+
+document.addEventListener('keydown', e=>{if(e.code==='Space') bird.velocity = jump;});
+canvas.addEventListener('touchstart',()=>{bird.velocity = jump;});
+
+update();
+</script>
+</body>
+</html>
