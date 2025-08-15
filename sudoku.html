@@ -21,26 +21,10 @@ select, button {
   padding: 5px 10px;
   margin: 5px;
 }
-#sudokuGrid {
-  border-collapse: collapse;
-}
-#sudokuGrid td {
-  width: 50px;
-  height: 50px;
-  text-align: center;
-  vertical-align: middle;
-  font-size: 24px;
-  border: 1px solid #fff;
-  background-color: #333;
-  color: #fff;
-}
-#sudokuGrid td.fixed {
-  font-weight: bold;
-  background-color: #555;
-}
-#sudokuGrid td.error {
-  background-color: #b00;
-  color: #fff;
+canvas {
+  background: #333;
+  border: 2px solid #fff;
+  touch-action: none;
 }
 #score {
   margin: 10px;
@@ -62,18 +46,24 @@ select, button {
     <option value="impossible">Imposible</option>
   </select>
   <button id="newGame">Nuevo Juego</button>
+  <button id="erase">Borrar Número</button>
 </div>
 
 <div id="score">Errores: 0 / 3</div>
-
-<table id="sudokuGrid"></table>
+<canvas id="sudokuCanvas" width="450" height="450"></canvas>
 
 <script>
+const canvas = document.getElementById("sudokuCanvas");
+const ctx = canvas.getContext("2d");
+
 const GRID_SIZE = 9;
-let maxErrors = 3;
-let currentErrors = 0;
+const CELL_SIZE = canvas.width / GRID_SIZE;
+
 let solution = [];
 let userGrid = [];
+let selectedCell = null;
+let maxErrors = 3;
+let currentErrors = 0;
 
 const difficultyLevels = {
   veryeasy: 45,
@@ -83,97 +73,115 @@ const difficultyLevels = {
   impossible: 10
 };
 
-function generateEmptyGrid(){
-  const grid = [];
-  for(let i=0;i<GRID_SIZE;i++){
-    grid.push(Array(GRID_SIZE).fill(0));
-  }
-  return grid;
-}
-
-// Función para generar un Sudoku (muy simple placeholder, se puede mejorar)
+// Generación rápida de Sudoku (placeholder simple)
 function generateSudoku(level){
-  let grid = generateEmptyGrid();
-  solution = generateEmptyGrid();
-  // rellenar diagonal de bloques para simplificar
+  solution = Array.from({length: GRID_SIZE},()=>Array(GRID_SIZE).fill(0));
+  userGrid = Array.from({length: GRID_SIZE},()=>Array(GRID_SIZE).fill(0));
+
+  // rellenar diagonal de bloques
   for(let block=0;block<GRID_SIZE;block+=3){
     for(let i=0;i<3;i++){
       for(let j=0;j<3;j++){
         let num = Math.floor(Math.random()*9)+1;
-        grid[block+i][block+j]=num;
         solution[block+i][block+j]=num;
+        userGrid[block+i][block+j]=num;
       }
     }
   }
-  // Borrar números según dificultad
+
+  // Borrar según dificultad
   let toRemove = 81 - difficultyLevels[level];
   while(toRemove>0){
-    let x = Math.floor(Math.random()*9);
-    let y = Math.floor(Math.random()*9);
-    if(grid[y][x]!==0){
-      grid[y][x]=0;
+    let x=Math.floor(Math.random()*9);
+    let y=Math.floor(Math.random()*9);
+    if(userGrid[y][x]!==0){
+      userGrid[y][x]=0;
       toRemove--;
     }
   }
-  userGrid = JSON.parse(JSON.stringify(grid));
-  return grid;
 }
 
+// Dibujar cuadrícula
 function drawGrid(){
-  const table = document.getElementById("sudokuGrid");
-  table.innerHTML = '';
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  // Celdas
   for(let i=0;i<GRID_SIZE;i++){
-    const row = document.createElement("tr");
     for(let j=0;j<GRID_SIZE;j++){
-      const cell = document.createElement("td");
+      let x=j*CELL_SIZE;
+      let y=i*CELL_SIZE;
+      // fondo
+      ctx.fillStyle="#444";
+      ctx.fillRect(x,y,CELL_SIZE,CELL_SIZE);
+
+      // borde grueso cada 3
+      ctx.strokeStyle="#fff";
+      ctx.lineWidth=(i%3===0||j%3===0)?2:1;
+      ctx.strokeRect(x,y,CELL_SIZE,CELL_SIZE);
+
+      // número
       if(userGrid[i][j]!==0){
-        cell.textContent = userGrid[i][j];
-        cell.classList.add("fixed");
-      } else {
-        const input = document.createElement("input");
-        input.type="number";
-        input.min=1;
-        input.max=9;
-        input.style.width="100%";
-        input.style.height="100%";
-        input.style.fontSize="24px";
-        input.style.backgroundColor="#333";
-        input.style.color="#fff";
-        input.addEventListener("input",(e)=>{
-          const val = parseInt(e.target.value);
-          if(val===solution[i][j]){
-            userGrid[i][j]=val;
-            e.target.parentElement.classList.remove("error");
-          } else if(val){
-            userGrid[i][j]=val;
-            e.target.parentElement.classList.add("error");
-            currentErrors++;
-            if(currentErrors>=maxErrors){
-              alert("Has alcanzado el máximo de errores!");
-              startGame();
-            }
-            document.getElementById("score").textContent = `Errores: ${currentErrors} / ${maxErrors}`;
-          }
-          if(val===0 || e.target.value===""){
-            userGrid[i][j]=0;
-            e.target.parentElement.classList.remove("error");
-          }
-        });
-        cell.appendChild(input);
+        ctx.fillStyle=solution[i][j]===userGrid[i][j]?"#fff":"#f00";
+        ctx.font="24px Arial";
+        ctx.textAlign="center";
+        ctx.textBaseline="middle";
+        ctx.fillText(userGrid[i][j], x+CELL_SIZE/2, y+CELL_SIZE/2);
       }
-      row.appendChild(cell);
+
+      // celda seleccionada
+      if(selectedCell && selectedCell.x===j && selectedCell.y===i){
+        ctx.strokeStyle="#0f0";
+        ctx.lineWidth=3;
+        ctx.strokeRect(x+1,y+1,CELL_SIZE-2,CELL_SIZE-2);
+      }
     }
-    table.appendChild(row);
   }
 }
 
-function startGame(){
-  currentErrors = 0;
-  const level = document.getElementById("difficulty").value;
-  maxErrors = 3; // Podés ajustar por dificultad si quieres
-  userGrid = generateSudoku(level);
+// Selección de celda
+canvas.addEventListener("click",e=>{
+  const rect = canvas.getBoundingClientRect();
+  const x = Math.floor((e.clientX - rect.left)/CELL_SIZE);
+  const y = Math.floor((e.clientY - rect.top)/CELL_SIZE);
+  selectedCell={x,y};
   drawGrid();
-  document.getElementById("score").textContent = `Errores: ${currentErrors} / ${maxErrors}`;
+});
+
+// Teclado
+document.addEventListener("keydown",e=>{
+  if(!selectedCell) return;
+  const i = selectedCell.y;
+  const j = selectedCell.x;
+  if(e.key>0 && e.key<=9){
+    const val = parseInt(e.key);
+    if(solution[i][j]===val){
+      userGrid[i][j]=val;
+    } else {
+      userGrid[i][j]=val;
+      currentErrors++;
+      if(currentErrors>=maxErrors){
+        alert("Has alcanzado el máximo de errores!");
+        startGame();
+      }
+    }
+    document.getElementById("score").textContent=`Errores: ${currentErrors} / ${maxErrors}`;
+  } else if(e.key==="Backspace" || e.key==="Delete"){
+    userGrid[i][j]=0;
+  }
+  drawGrid();
+});
+
+document.getElementById("erase").addEventListener("click",()=>{
+  if(selectedCell) userGrid[selectedCell.y][selectedCell.x]=0;
+  drawGrid();
+});
+
+// Nuevo juego
+function startGame(){
+  currentErrors=0;
+  const level=document.getElementById("difficulty").value;
+  generateSudoku(level);
+  drawGrid();
+  document.getElementById("score").textContent=`Errores: ${currentErrors} / ${maxErrors}`;
 }
 
 document.getElementById("newGame").addEventListener("click",startGame);
