@@ -88,10 +88,10 @@ function checkCollisions() {
       }
     }
   });
-  // Tocando el suelo: no se reinicia, no se queda estático
+  // Evitar que el bird caiga por debajo del canvas
   if(bird.y + bird.height > canvas.height){
     bird.y = canvas.height - bird.height;
-    bird.velocity = 0; // se detiene momentáneamente pero puede saltar
+    // No tocar bird.velocity, para permitir saltos normales
   }
 }
 
@@ -124,14 +124,20 @@ function update() {
   checkCollisions();
   updateScore();
 
+  // física del bird
   bird.velocity += bird.gravity;
   bird.y += bird.velocity;
+
+  // prevenir que se vaya debajo del canvas
+  if(bird.y + bird.height > canvas.height){
+    bird.y = canvas.height - bird.height;
+  }
 
   frame++;
   requestAnimationFrame(update);
 }
 
-// Controles: Space o toque en pantalla
+// controles: Space o toque en pantalla
 document.addEventListener('keydown', e => {
   if(e.code === 'Space') bird.velocity = bird.lift;
 });
