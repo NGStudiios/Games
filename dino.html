@@ -3,140 +3,258 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Flappy Bird Moderno</title>
+<title>Dinosaurio Prácticamente - Mejorado</title>
 <style>
 body {
   margin:0;
-  padding:0;
-  font-family:'Segoe UI', sans-serif;
-  overflow:hidden;
+  font-family:'Segoe UI',sans-serif;
   background:#87CEEB; /* cielo celeste */
+  overflow:hidden;
 }
 canvas {
   display:block;
   margin:0 auto;
-  background: url('nubes.png') repeat-x;
-  background-size: cover;
+  background:#87CEEB;
   border:3px solid #00e5ff;
 }
-.score {
-  color:#fff;
-  font-size:1.5em;
+.scoreboard {
   text-align:center;
-  text-shadow:0 0 5px #00e5ff;
+  color:#fff;
+  text-shadow:0 0 5px #000;
+  font-size:1.5em;
   margin:5px 0;
 }
+button {
+  position:fixed;
+  bottom:20px;
+  width:80px;
+  height:50px;
+  font-size:1.2em;
+  border:none;
+  border-radius:10px;
+  background:#00e5ff;
+  color:#111;
+  z-index:10;
+}
+#jumpBtn { left:20px; }
+#duckBtn { right:20px; }
 </style>
 </head>
 <body>
-<div class="score">Puntaje: <span id="score">0</span></div>
-<canvas id="gameCanvas" width="400" height="600"></canvas>
+<div class="scoreboard">
+  Puntaje: <span id="score">0</span> | Récord: <span id="record">0</span>
+</div>
+<canvas id="gameCanvas" width="1000" height="300"></canvas>
+<button id="jumpBtn">↑ Saltar</button>
+<button id="duckBtn">↓ Agachar</button>
 <script>
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-const bird = {
+let score = 0;
+let record = localStorage.getItem('dinoRecord') || 0;
+let speed = 6;
+let frame = 0;
+
+// Dino
+const dino = {
   x: 50,
-  y: 300,
-  width: 40,
-  height: 40,
-  velocity: 0,
-  gravity: 0.6,
-  lift: -7, // salto más controlado
+  y: 200,
+  width: 80,
+  height: 80,
+  velocityY: 0,
+  gravity: 1.2,
+  jump: -20,
+  onGround: true,
+  ducking: false,
   image: new Image()
 };
-bird.image.src = 'flappy.png';
+dino.image.src = 'dino.png';
 
-let pipes = [];
-let frame = 0;
-let score = 0;
-let speed = 2;
+// Obstáculos (cactus)
+let obstacles = [];
+const cactusImage = new Image();
+cactusImage.src = 'captus.png';
+
+// Meteoritos
+let meteors = [];
+const meteorImage = new Image();
+meteorImage.src = 'meteor.png';
+
+// Nubes
+let clouds = [];
+for(let i=0;i<5;i++){
+  clouds.push({x: Math.random()*canvas.width, y: Math.random()*50, width:100, height:50});
+}
 
 const scoreEl = document.getElementById('score');
+const recordEl = document.getElementById('record');
+recordEl.innerText = record;
 
-function spawnPipe() {
-  const minHeight = 80;
-  const maxHeight = canvas.height - 200;
-  const top = Math.floor(Math.random() * (maxHeight - minHeight)) + minHeight;
-  const gap = 150;
-  pipes.push({ x: canvas.width, top, gap, passed:false });
-}
-
-function drawBird() {
-  ctx.drawImage(bird.image, bird.x, bird.y, bird.width, bird.height);
-}
-
-function drawPipes() {
-  ctx.fillStyle = '#006400'; // verde oscuro
-  pipes.forEach(pipe => {
-    ctx.fillRect(pipe.x, 0, 50, pipe.top);
-    ctx.fillRect(pipe.x, pipe.top + pipe.gap, 50, canvas.height - pipe.top - pipe.gap);
+function spawnObstacle() {
+  const height = 60; // cactus más grande
+  obstacles.push({
+    x: canvas.width,
+    y: canvas.height - height - 40,
+    width: 40,
+    height: height,
+    image: cactusImage
   });
 }
 
-function updatePipes() {
-  if(frame % 90 === 0) spawnPipe();
-  pipes.forEach(pipe => pipe.x -= speed);
-  pipes = pipes.filter(pipe => pipe.x + 50 > 0);
+function spawnMeteor() {
+  const size = 40 + Math.random()*40;
+  meteors.push({
+    x: Math.random()*(canvas.width-50),
+    y: -size,
+    width: size,
+    height: size,
+    image: meteorImage,
+    velocityY: 6 + Math.random()*3
+  });
 }
 
-function checkCollisions() {
-  pipes.forEach(pipe => {
-    if(bird.x + bird.width > pipe.x && bird.x < pipe.x + 50){
-      if(bird.y < pipe.top || bird.y + bird.height > pipe.top + pipe.gap){
-        resetGame();
-      }
-    }
-  });
-  // El personaje puede tocar el suelo y seguir cayendo
-  if(bird.y + bird.height > canvas.height){
-    // No detener velocity, sigue cayendo si intenta saltar
+function drawDino() {
+  if(dino.ducking){
+    ctx.drawImage(dino.image, dino.x, dino.y + dino.height/2, dino.width, dino.height/2);
+  } else {
+    ctx.drawImage(dino.image, dino.x, dino.y, dino.width, dino.height);
   }
 }
 
-function updateScore() {
-  pipes.forEach(pipe => {
-    if(!pipe.passed && bird.x > pipe.x + 50){
-      pipe.passed = true;
-      score++;
-      scoreEl.innerText = score;
-      speed = 2 + score*0.1; // velocidad aumenta progresivamente
+function drawObstacles() {
+  obstacles.forEach(obs => ctx.drawImage(obs.image, obs.x, obs.y, obs.width, obs.height));
+}
+
+function drawMeteors() {
+  meteors.forEach(m => ctx.drawImage(m.image, m.x, m.y, m.width, m.height));
+}
+
+function drawClouds() {
+  ctx.fillStyle = '#fff';
+  clouds.forEach(c => {
+    ctx.beginPath();
+    ctx.ellipse(c.x, c.y, c.width, c.height, 0,0,2*Math.PI);
+    ctx.fill();
+    c.x -= 0.5; // mover nube lentamente
+    if(c.x + c.width <0) c.x = canvas.width;
+  });
+}
+
+function updateObstacles() {
+  if(frame % 120 === 0) spawnObstacle();
+  obstacles.forEach(obs => obs.x -= speed);
+  obstacles = obstacles.filter(obs => obs.x + obs.width > 0);
+}
+
+function updateMeteors() {
+  if(frame % 200 === 0) spawnMeteor();
+  meteors.forEach(m => m.y += m.velocityY);
+  meteors = meteors.filter(m => m.y < canvas.height);
+}
+
+function checkCollisions() {
+  obstacles.forEach(obs => {
+    if(dino.x < obs.x + obs.width &&
+       dino.x + dino.width > obs.x &&
+       dino.y < obs.y + obs.height &&
+       dino.y + dino.height > obs.y){
+      resetGame();
+    }
+  });
+  meteors.forEach(m => {
+    if(dino.x < m.x + m.width &&
+       dino.x + dino.width > m.x &&
+       dino.y < m.y + m.height &&
+       dino.y + dino.height > m.y){
+      resetGame();
     }
   });
 }
 
+function updateScore() {
+  score += 0.2;
+  scoreEl.innerText = Math.floor(score);
+  if(score > record){
+    record = Math.floor(score);
+    recordEl.innerText = record;
+    localStorage.setItem('dinoRecord', record);
+  }
+  speed = 6 + Math.floor(score/100);
+}
+
 function resetGame() {
-  bird.y = 300;
-  bird.velocity = 0;
-  pipes = [];
+  dino.y = 200;
+  dino.velocityY = 0;
+  dino.ducking = false;
+  dino.onGround = true;
+  obstacles = [];
+  meteors = [];
   frame = 0;
   score = 0;
-  speed = 2;
+  speed = 6;
   scoreEl.innerText = score;
 }
 
 function update() {
   ctx.clearRect(0,0,canvas.width,canvas.height);
-  drawBird();
-  drawPipes();
-  updatePipes();
+
+  // fondo
+  ctx.fillStyle = '#87CEEB';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  drawClouds();
+
+  // suelo marrón
+  ctx.fillStyle = '#8B4513';
+  ctx.fillRect(0, canvas.height - 40, canvas.width, 40);
+
+  drawDino();
+  drawObstacles();
+  drawMeteors();
+  updateObstacles();
+  updateMeteors();
   checkCollisions();
   updateScore();
 
-  bird.velocity += bird.gravity;
-  bird.y += bird.velocity;
+  // física Dino
+  if(!dino.ducking){
+    dino.velocityY += dino.gravity;
+    dino.y += dino.velocityY;
+    if(dino.y + dino.height >= canvas.height - 40){
+      dino.y = canvas.height - 40 - dino.height;
+      dino.velocityY = 0;
+      dino.onGround = true;
+    } else {
+      dino.onGround = false;
+    }
+  }
 
   frame++;
   requestAnimationFrame(update);
 }
 
 // controles
+function jump() {
+  if(dino.onGround && !dino.ducking){
+    dino.velocityY = dino.jump;
+  }
+}
+function duck(state){
+  dino.ducking = state;
+}
+
 document.addEventListener('keydown', e => {
-  if(e.code === 'Space') bird.velocity = bird.lift;
+  if(e.code === 'Space') jump();
+  if(e.code === 'ArrowDown') duck(true);
 });
-canvas.addEventListener('touchstart', () => {
-  bird.velocity = bird.lift;
+document.addEventListener('keyup', e => {
+  if(e.code === 'ArrowDown') duck(false);
 });
+canvas.addEventListener('touchstart', jump);
+document.getElementById('jumpBtn').addEventListener('touchstart', jump);
+document.getElementById('duckBtn').addEventListener('touchstart', ()=>duck(true));
+document.getElementById('duckBtn').addEventListener('touchend', ()=>duck(false));
 
 update();
 </script>
