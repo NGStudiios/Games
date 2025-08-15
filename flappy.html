@@ -42,7 +42,7 @@ const bird = {
   height: 40,
   velocity: 0,
   gravity: 0.6,
-  lift: -12,
+  lift: -7, // salto más controlado
   image: new Image()
 };
 bird.image.src = 'flappy.png';
@@ -50,7 +50,7 @@ bird.image.src = 'flappy.png';
 let pipes = [];
 let frame = 0;
 let score = 0;
-let speed = 2; // velocidad inicial
+let speed = 2;
 
 const scoreEl = document.getElementById('score');
 
@@ -58,7 +58,7 @@ function spawnPipe() {
   const minHeight = 80;
   const maxHeight = canvas.height - 200;
   const top = Math.floor(Math.random() * (maxHeight - minHeight)) + minHeight;
-  const gap = 150; // separación fija, puede variar luego
+  const gap = 150;
   pipes.push({ x: canvas.width, top, gap, passed:false });
 }
 
@@ -88,9 +88,9 @@ function checkCollisions() {
       }
     }
   });
+  // El personaje puede tocar el suelo y seguir cayendo
   if(bird.y + bird.height > canvas.height){
-    bird.y = canvas.height - bird.height;
-    bird.velocity = 0; // tocar el suelo no reinicia
+    // No detener velocity, sigue cayendo si intenta saltar
   }
 }
 
@@ -100,8 +100,7 @@ function updateScore() {
       pipe.passed = true;
       score++;
       scoreEl.innerText = score;
-      // aumenta velocidad progresivamente
-      speed = 2 + score*0.1;
+      speed = 2 + score*0.1; // velocidad aumenta progresivamente
     }
   });
 }
