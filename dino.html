@@ -33,6 +33,7 @@ canvas {
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
+// Dinosaurio
 const dino = {
   x: 50,
   y: 150,
@@ -42,10 +43,15 @@ const dino = {
   gravity: 1,
   jump: -15,
   onGround: true,
-  color: '#555'
+  image: new Image()
 };
+dino.image.src = 'dino.png';
 
+// Obstáculos
 let obstacles = [];
+let cactusImage = new Image();
+cactusImage.src = 'captus.png';
+
 let frame = 0;
 let score = 0;
 let speed = 5;
@@ -53,24 +59,23 @@ let speed = 5;
 const scoreEl = document.getElementById('score');
 
 function spawnObstacle() {
-  const height = Math.floor(Math.random() * 30) + 20;
+  const height = 40; // tamaño fijo para cactus
   obstacles.push({
     x: canvas.width,
     y: canvas.height - height - 20,
     width: 20,
-    height: height
+    height: height,
+    image: cactusImage
   });
 }
 
 function drawDino() {
-  ctx.fillStyle = dino.color;
-  ctx.fillRect(dino.x, dino.y, dino.width, dino.height);
+  ctx.drawImage(dino.image, dino.x, dino.y, dino.width, dino.height);
 }
 
 function drawObstacles() {
-  ctx.fillStyle = '#006400';
   obstacles.forEach(obs => {
-    ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+    ctx.drawImage(obs.image, obs.x, obs.y, obs.width, obs.height);
   });
 }
 
@@ -94,7 +99,6 @@ function checkCollisions() {
 function updateScore() {
   score += 0.1;
   scoreEl.innerText = Math.floor(score);
-  // velocidad aumenta con el tiempo
   speed = 5 + Math.floor(score/100);
 }
 
@@ -116,16 +120,13 @@ function update() {
   ctx.fillStyle = '#777';
   ctx.fillRect(0, canvas.height - 20, canvas.width, 20);
 
-  // Dino
   drawDino();
-
-  // Obstáculos
   drawObstacles();
   updateObstacles();
   checkCollisions();
   updateScore();
 
-  // física Dino
+  // física dino
   dino.velocityY += dino.gravity;
   dino.y += dino.velocityY;
 
