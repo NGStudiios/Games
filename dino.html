@@ -30,6 +30,7 @@ button {
 </style>
 </head>
 <body>
+
 <canvas id="gameCanvas" width="800" height="400"></canvas>
 <div id="controls">
   <button id="jumpBtn">⬆️ Saltar</button>
@@ -76,7 +77,7 @@ let cactuses = [];
 const cactusInterval = 1500;
 let lastCactusTime = 0;
 
-// Controles
+// Controles teclado
 document.addEventListener("keydown", e => {
   if(e.code === "Space") jump();
   if(e.code === "ArrowDown") duck(true);
@@ -85,6 +86,7 @@ document.addEventListener("keyup", e => {
   if(e.code === "ArrowDown") duck(false);
 });
 
+// Controles botones
 document.getElementById("jumpBtn").addEventListener("click", jump);
 document.getElementById("duckBtn").addEventListener("mousedown", ()=>duck(true));
 document.getElementById("duckBtn").addEventListener("mouseup", ()=>duck(false));
@@ -101,6 +103,7 @@ function duck(state) {
   dino.height = state ? 30 : 60;
 }
 
+// Spawns
 function spawnCactus() {
   cactuses.push({
     x: canvas.width,
@@ -111,7 +114,7 @@ function spawnCactus() {
 }
 
 function spawnMeteor() {
-  const height = Math.random() * 150 + 50; // altura variable
+  const height = Math.random() * 150 + 50;
   meteors.push({
     x: canvas.width,
     y: height,
@@ -121,6 +124,7 @@ function spawnMeteor() {
   });
 }
 
+// Colisiones
 function checkCollision(rect1, rect2){
   return rect1.x < rect2.x + rect2.width &&
          rect1.x + rect1.width > rect2.x &&
@@ -128,6 +132,7 @@ function checkCollision(rect1, rect2){
          rect1.y + rect1.height > rect2.y;
 }
 
+// Actualiza todo
 function update(deltaTime){
   // Dinosaurio
   dino.vy += GRAVITY;
@@ -138,26 +143,26 @@ function update(deltaTime){
     dino.isJumping = false;
   }
 
-  // Cactus
+  // Spawns cactus
   if(Date.now() - lastCactusTime > cactusInterval){
     spawnCactus();
     lastCactusTime = Date.now();
   }
   cactuses.forEach((c, i) => {
-    c.x -= 6;
+    c.x -= 6; // velocidad hacia izquierda
     if(c.x + c.width < 0) cactuses.splice(i,1);
     if(checkCollision(dino, c)){
       resetGame();
     }
   });
 
-  // Meteoritos (paralelos al piso)
+  // Spawns meteoritos
   if(Date.now() - lastMeteorTime > meteorInterval){
     spawnMeteor();
     lastMeteorTime = Date.now();
   }
   meteors.forEach((m,i) => {
-    m.x -= m.speed; // solo horizontal
+    m.x -= m.speed; // movimiento paralelo al piso
     if(m.x + m.width < 0) meteors.splice(i,1);
     if(checkCollision(dino, m)){
       resetGame();
@@ -167,6 +172,7 @@ function update(deltaTime){
   score += deltaTime*0.01;
 }
 
+// Dibuja todo
 function draw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
@@ -201,6 +207,17 @@ function draw(){
   ctx.fillText("Score: " + Math.floor(score), canvas.width - 120, 30);
 }
 
+// Reinicia juego
+function resetGame(){
+  score = 0;
+  dino.y = FLOOR_Y;
+  dino.vy = 0;
+  dino.isJumping = false;
+  dino.isDucking = false;
+  cactuses = [];
+  meteors = [];
+}
+
 let lastTime = 0;
 function gameLoop(timestamp){
   const deltaTime = timestamp - lastTime;
@@ -210,15 +227,6 @@ function gameLoop(timestamp){
   draw();
 
   requestAnimationFrame(gameLoop);
-}
-
-function resetGame(){
-  score = 0;
-  dino.y = FLOOR_Y;
-  dino.vy = 0;
-  dino.isJumping = false;
-  cactuses = [];
-  meteors = [];
 }
 
 dinoImg.onload = ()=>requestAnimationFrame(gameLoop);
