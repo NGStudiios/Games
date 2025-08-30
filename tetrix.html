@@ -61,10 +61,48 @@
       box-shadow: 0 0 6px #ef4444;
     }
 
-    /* Next piece preview smaller */
+    /* Next piece preview */
     #next-piece {
       width: 32rem;
       height: 32rem;
+    }
+
+    /* Overlay for game over */
+    #game-over-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.95);
+      color: #f87171; /* red-400 */
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-weight: 700;
+      font-size: 2.5rem;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      user-select: none;
+    }
+    #game-over-overlay.show {
+      opacity: 1;
+      pointer-events: all;
+    }
+    #game-over-overlay button {
+      margin-top: 1.5rem;
+      background-color: #ef4444;
+      color: white;
+      padding: 0.75rem 2rem;
+      border-radius: 0.5rem;
+      font-size: 1.25rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: background-color 0.2s ease;
+    }
+    #game-over-overlay button:hover {
+      background-color: #dc2626;
     }
 
     /* Responsive adjustments */
@@ -126,6 +164,55 @@
         font-size: 1.125rem;
         padding: 0.75rem 0;
       }
+
+      /* Smaller score, level, next piece on mobile in a horizontal row on top right */
+      #info-mobile {
+        position: fixed;
+        top: 0.5rem;
+        right: 0.5rem;
+        display: flex;
+        gap: 0.75rem;
+        background: #1e293b;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.5rem;
+        z-index: 60;
+        user-select: none;
+      }
+      #info-mobile > div {
+        background: #334155;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.375rem;
+        text-align: center;
+        min-width: 3.5rem;
+      }
+      #info-mobile h2 {
+        font-size: 0.75rem;
+        margin-bottom: 0.1rem;
+        font-weight: 600;
+        color: #94a3b8;
+      }
+      #info-mobile p {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #f1f5f9;
+        line-height: 1;
+      }
+      #next-piece-mobile {
+        width: 4.5rem;
+        height: 4.5rem;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        grid-template-rows: repeat(4, 1fr);
+        gap: 1px;
+        background: #0f172a;
+        border-radius: 0.375rem;
+        box-shadow: 0 0 6px #a855f7;
+      }
+      #next-piece-mobile .cell {
+        width: 1rem;
+        height: 1rem;
+        border-radius: 0.15rem;
+      }
     }
   </style>
 </head>
@@ -139,7 +226,7 @@
       <div id="tetris" aria-label="Tetris game board" role="grid" tabindex="0"></div>
     </section>
 
-    <section class="w-full max-w-xs text-center md:text-left">
+    <section class="w-full max-w-xs text-center md:text-left hidden md:block">
       <div class="mb-6 p-3 sm:p-4 bg-slate-800 rounded-lg shadow-lg">
         <h2 class="text-xl sm:text-2xl font-semibold mb-1 sm:mb-2">Score</h2>
         <p id="score" class="text-3xl sm:text-4xl font-bold">0</p>
@@ -168,6 +255,21 @@
       </p>
     </section>
   </main>
+
+  <!-- Mobile info: score, level, next piece -->
+  <div id="info-mobile" class="md:hidden" aria-label="Game info for mobile">
+    <div>
+      <h2>Score</h2>
+      <p id="score-mobile">0</p>
+    </div>
+    <div>
+      <h2>Level</h2>
+      <p id="level-mobile">1</p>
+    </div>
+    <div aria-label="Next piece preview mobile">
+      <div id="next-piece-mobile" class="rounded-lg"></div>
+    </div>
+  </div>
 
   <!-- Mobile controls -->
   <nav
@@ -216,6 +318,12 @@
       <i class="fas fa-arrow-down"></i><i class="fas fa-arrow-down ml-1"></i>
     </button>
   </nav>
+
+  <!-- Game Over Overlay -->
+  <div id="game-over-overlay" role="alert" aria-live="assertive" aria-modal="true" hidden>
+    <div>¡Has perdido!</div>
+    <button id="game-over-restart" aria-label="Reiniciar juego">Reiniciar</button>
+  </div>
 
   <footer class="text-center p-4 text-slate-500 text-sm">
     &copy; 2024 Tetris by Tailwind Expert
@@ -349,12 +457,25 @@
     let isGameOver = false;
     let nextPiece = null;
 
+    // For soft drop animation control
+    let softDropActive = false;
+    let softDropTimer = null;
+
     // DOM elements
     const tetrisEl = document.getElementById("tetris");
     const scoreEl = document.getElementById("score");
     const levelEl = document.getElementById("level");
     const nextPieceEl = document.getElementById("next-piece");
     const startButton = document.getElementById("start-button");
+
+    // Mobile info elements
+    const scoreMobileEl = document.getElementById("score-mobile");
+    const levelMobileEl = document.getElementById("level-mobile");
+    const nextPieceMobileEl = document.getElementById("next-piece-mobile");
+
+    // Game over overlay
+    const gameOverOverlay = document.getElementById("game-over-overlay");
+    const gameOverRestartBtn = document.getElementById("game-over-restart");
 
     // Initialize the board with empty cells
     function initBoard() {
@@ -500,7 +621,7 @@
 
       // Check if spawn position is blocked (top reached)
       if (!isValidPosition(currentX, currentY, currentRotation)) {
-        gameOver();
+        triggerGameOver();
         return;
       }
 
@@ -565,25 +686,37 @@
       }
     }
 
-    // Hard drop piece
+    // Hard drop piece with animation (soft drop effect)
     function hardDrop() {
       if (isGameOver) return;
-      while (isValidPosition(currentX, currentY + 1, currentRotation)) {
-        currentY++;
+      if (softDropActive) return; // prevent multiple hard drops at once
+      softDropActive = true;
+
+      function stepDrop() {
+        if (isValidPosition(currentX, currentY + 1, currentRotation)) {
+          currentY++;
+          draw();
+          softDropTimer = setTimeout(stepDrop, 50);
+        } else {
+          placePiece();
+          clearLines();
+          spawnPiece();
+          draw();
+          softDropActive = false;
+        }
       }
-      placePiece();
-      clearLines();
-      spawnPiece();
-      draw();
+      stepDrop();
     }
 
-    // Update score and level display
+    // Update score and level display (desktop and mobile)
     function updateScoreLevel() {
       scoreEl.textContent = score;
       levelEl.textContent = level;
+      scoreMobileEl.textContent = score;
+      levelMobileEl.textContent = level;
     }
 
-    // Draw next piece preview
+    // Draw next piece preview desktop
     function drawNextPiece() {
       nextPieceEl.innerHTML = "";
       const shape = TETROMINOS[nextPiece][0];
@@ -597,20 +730,56 @@
           nextPieceEl.appendChild(cell);
         }
       }
+      drawNextPieceMobile();
     }
 
-    // Game over handler
-    function gameOver() {
+    // Draw next piece preview mobile
+    function drawNextPieceMobile() {
+      nextPieceMobileEl.innerHTML = "";
+      const shape = TETROMINOS[nextPiece][0];
+      for (let r = 0; r < 4; r++) {
+        for (let c = 0; c < 4; c++) {
+          const cell = document.createElement("div");
+          cell.classList.add("cell");
+          if (shape[r] && shape[r][c]) {
+            cell.classList.add(COLORS[nextPiece]);
+          }
+          nextPieceMobileEl.appendChild(cell);
+        }
+      }
+    }
+
+    // Game over handler with overlay and auto restart
+    function triggerGameOver() {
       isGameOver = true;
       clearInterval(dropTimer);
-      alert("Game Over! Your score: " + score);
+      clearTimeout(softDropTimer);
+      softDropActive = false;
+      gameOverOverlay.hidden = false;
+      gameOverOverlay.classList.add("show");
+      // Remove current piece from board display
+      currentPiece = null;
+      draw();
+
+      // Auto restart after 3 seconds if user doesn't click
+      autoRestartTimeout = setTimeout(() => {
+        hideGameOverAndRestart();
+      }, 3000);
+    }
+
+    function hideGameOverAndRestart() {
+      gameOverOverlay.classList.remove("show");
+      setTimeout(() => {
+        gameOverOverlay.hidden = true;
+        startGame();
+      }, 300);
     }
 
     // Reset drop timer with current dropInterval
     function resetDropTimer() {
       if (dropTimer) clearInterval(dropTimer);
       dropTimer = setInterval(() => {
-        if (!isGameOver) moveDown();
+        if (!isGameOver && !softDropActive) moveDown();
       }, dropInterval);
     }
 
@@ -627,6 +796,9 @@
       draw();
       resetDropTimer();
       tetrisEl.focus();
+      gameOverOverlay.hidden = true;
+      gameOverOverlay.classList.remove("show");
+      if (autoRestartTimeout) clearTimeout(autoRestartTimeout);
     }
 
     // Keyboard controls
@@ -664,10 +836,10 @@
     document.getElementById("btn-drop").addEventListener("click", hardDrop);
 
     startButton.addEventListener("click", startGame);
+    gameOverRestartBtn.addEventListener("click", hideGameOverAndRestart);
 
     // Initialize empty board on load
     initBoard();
   </script>
 </body>
 </html>
-}
