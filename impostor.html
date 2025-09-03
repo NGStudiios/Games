@@ -53,79 +53,8 @@
 </div>
 
 <script>
-// Base de datos de jugadores con descripciones breves
+// Base de datos de jugadores
 const playersData = {
-  /* Categoría 1 - tus 18 originales */
-  "Pelé": {desc:"El rey del fútbol brasileño, tricampeón mundial con Brasil.", img:"Pelé"},
-  "DiegoMaradona": {desc:"El 10 argentino, campeón del mundo en 1986, ídolo de Nápoles.", img:"DiegoMaradona"},
-  "LionelMessi": {desc:"Crack argentino, múltiples Balones de Oro, campeón mundial 2022.", img:"LionelMessi"},
-  "CristianoRonaldo": {desc:"Estrella portuguesa, máquina de goles, ídolo del Real Madrid y Juventus.", img:"CristianoRonaldo"},
-  "JohanCruyff": {desc:"Genio holandés, creador del fútbol total, leyenda del Ajax y Barcelona.", img:"JohanCruyff"},
-  "ZinedineZidane": {desc:"Elegante francés, campeón mundial 1998 y estrella del Real Madrid.", img:"ZinedineZidane"},
-  "Ronaldinho": {desc:"Mago brasileño, campeón mundial 2002, famoso por su sonrisa y regates.", img:"Ronaldinho"},
-  "MichelPlatini": {desc:"Estrella francesa de los 80, tres veces Balón de Oro, gran estratega.", img:"MichelPlatini"},
-  "GeorgeBest": {desc:"Crack norirlandés, ídolo del Manchester United, famoso por su estilo y talento.", img:"GeorgeBest"},
-  "FranzBeckenbauer": {desc:"El 'Kaiser' alemán, defensor elegante, campeón mundial como jugador y entrenador.", img:"FranzBeckenbauer"},
-  "PaoloMaldini": {desc:"Defensor italiano legendario, símbolo del Milan y de la Selección Italiana.", img:"PaoloMaldini"},
-  "RobertoBaggio": {desc:"Talento italiano de los 90, recordado por su técnica y liderazgo.", img:"RobertoBaggio"},
-  "ThierryHenry": {desc:"Delantero francés, estrella del Arsenal y campeón mundial 1998.", img:"ThierryHenry"},
-  "LuisSuárez": {desc:"Goleador uruguayo, famoso por su instinto en el área y su fuerza.", img:"LuisSuárez"},
-  "Neymar": {desc:"Brasileño habilidoso, estrella del PSG y de Brasil.", img:"Neymar"},
-  "KylianMbappé": {desc:"Joven francés veloz, campeón mundial 2018, goleador nato.", img:"KylianMbappé"},
-  "AndrésIniesta": {desc:"Mediocampista español, clave en la época dorada del Barcelona y España.", img:"AndrésIniesta"},
-  "XaviHernández": {desc:"Maestro del toque español, cerebro del Barcelona y de la Selección.", img:"XaviHernández"},
-
-  /* Categoría 2 - leyendas (sin repetir los anteriores) */
-  "LevYashin": {desc:"Portero soviético, único guardameta Balón de Oro, 'La Araña Negra'.", img:"LevYashin"},
-  "AlfredoDiStefano": {desc:"Ídolo del Real Madrid, delantero elegante y polivalente.", img:"AlfredoDiStefano"},
-  "FerencPuskás": {desc:"Goleador húngaro, leyenda del Real Madrid, famoso por su potente disparo.", img:"FerencPuskás"},
-  "Eusebio": {desc:"El 'Pantera Negra' portugués, goleador histórico y campeón europeo.", img:"Eusebio"},
-  "PaoloRossi": {desc:"Héroe italiano del Mundial 1982, goleador y símbolo del fútbol italiano.", img:"PaoloRossi"},
-  "MarcoVanBasten": {desc:"Delantero holandés elegante, campeón europeo 1988, icono del Milan.", img:"MarcoVanBasten"},
-  "RuudGullit": {desc:"Versátil holandés, campeón europeo con Países Bajos y Milan.", img:"RuudGullit"},
-  "RobertoCarlos": {desc:"Lateral brasileño, famoso por su velocidad y tiros potentes.", img:"RobertoCarlos"},
-  "Cafú": {desc:"Defensor brasileño, campeón mundial 1994 y 2002, incansable por la banda.", img:"Cafú"},
-  "FrancoBaresi": {desc:"Defensa italiano legendario, símbolo del Milan y estratega defensivo.", img:"FrancoBaresi"},
-  "DinoZoff": {desc:"Portero italiano, campeón mundial 1982, ejemplo de longevidad y liderazgo.", img:"DinoZoff"},
-  "BobbyCharlton": {desc:"Leyenda inglesa del Manchester United y campeón mundial 1966.", img:"BobbyCharlton"},
-  "DenisLaw": {desc:"Ídolo escocés del Manchester United, gran goleador en los 60s.", img:"DenisLaw"},
-  "GerdMüller": {desc:"Máquina de goles alemana, campeón mundial 1974.", img:"GerdMüller"},
-  "JohanNeeskens": {desc:"Holandés clave en el fútbol total, talentoso mediocampista.", img:"JohanNeeskens"},
-  "RaymondKopa": {desc:"Francés, campeón del mundo 1958, estrella del Real Madrid.", img:"RaymondKopa"},
-  "KarlHeinzRummenigge": {desc:"Delantero alemán, estrella de los 80 y Balón de Oro.", img:"KarlHeinzRummenigge"},
-  "Sócrates": {desc:"Mediocampista brasileño, líder y pensador dentro y fuera de la cancha.", img:"Sócrates"},
-  "Zico": {desc:"Mago brasileño, excelente goleador y creador de juego.", img:"Zico"},
-  "Romário": {desc:"Delantero brasileño, campeón mundial 1994, famoso por su técnica.", img:"Romário"},
-  "Rivaldo": {desc:"Brasileño habilidoso, campeón mundial 2002, gran goleador.", img:"Rivaldo"},
-  "Garrincha": {desc:"Extremo brasileño, genio del regate, campeón mundial 1958 y 1962.", img:"Garrincha"},
-  "Didi": {desc:"Mediocampista brasileño, cerebro del equipo campeón 1958 y 1962.", img:"Didi"},
-  "Tostão": {desc:"Delantero brasileño inteligente y goleador del Mundial 1970.", img:"Tostão"},
-  "Clodoaldo": {desc:"Mediocampista brasileño, campeón mundial 1970, gran pasador.", img:"Clodoaldo"},
-  "CarlosValderrama": {desc:"Ícono colombiano, famoso por su visión y su melena inconfundible.", img:"CarlosValderrama"},
-  "RenéHiguita": {desc:"Portero colombiano excéntrico, conocido por su estilo arriesgado.", img:"RenéHiguita"},
-  "DanielPassarella": {desc:"Defensa argentino, campeón mundial 1978, gran líder.", img:"DanielPassarella"},
-  "OscarRuggeri": {desc:"Defensor argentino, campeón mundial 1986, sólido y contundente.", img:"OscarRuggeri"},
-  "MarioKempes": {desc:"Delantero argentino, campeón mundial 1978, goleador del torneo.", img:"MarioKempes"},
-  "EnzoFrancescoli": {desc:"Uruguayo elegante, mediocampista creativo de los 80s y 90s.", img:"EnzoFrancescoli"},
-  "ArielOrtega": {desc:"Talentoso argentino, regateador y estrella de River Plate.", img:"ArielOrtega"},
-  "FernandoRedondo": {desc:"Mediocampista argentino, elegante y táctico, símbolo del Real Madrid.", img:"FernandoRedondo"},
-  "IvánZamorano": {desc:"Delantero chileno goleador, líder de la Roja y del Inter de Milán.", img:"IvánZamorano"},
-  "MarceloSalas": {desc:"Delantero chileno potente, ídolo en Lazio y Juventus.", img:"MarceloSalas"},
-  "HristoStoichkov": {desc:"Búlgaro habilidoso, estrella del Barcelona de los 90s.", img:"HristoStoichkov"},
-  "RobertoDonadoni": {desc:"Mediocampista italiano, gran pasador y ganador de múltiples títulos.", img:"RobertoDonadoni"},
-  "GianniRivera": {desc:"Delantero italiano elegante, Balón de Oro y estrella del Milan.", img:"GianniRivera"},
-  "AlessandroAltobelli": {desc:"Delantero italiano, campeón mundial 1982, goleador nato.", img:"AlessandroAltobelli"},
-  "GiuseppeMeazza": {desc:"Delantero italiano legendario, símbolo del Inter y Milan.", img:"GiuseppeMeazza"},
-  "OmarSivori": {desc:"Delantero argentino-italiano, habilidoso y goleador.", img:"OmarSivori"},
-  "AntonioCabrini": {desc:"Defensa italiano, campeón mundial 1982, buen lateral izquierdo.", img:"AntonioCabrini"},
-  "GiancarloAntognoni": {desc:"Mediocampista italiano, líder y estrella de la Fiorentina.", img:"GiancarloAntognoni"},
-  "JoseManuelMoreno": {desc:"Delantero argentino, campeón de América y Europa, leyenda de River.", img:"JoseManuelMoreno"},
-
-  /* Categoría 3 - jugadores actuales / recientes (sin repetir) */
-  "IkerCasillas": {desc:"Portero español, campeón mundial 2010, símbolo del Real Madrid.", img:"IkerCasillas"},
-  "GianluigiBuffon": {desc:"Portero italiano, campeón mundial 2006, figura de la Juventus.", img:"GianluigiBuffon"},
-  "ManuelNeuer": {desc:"Portero alemán moderno, ágil y seguro, campeón mundial 2014.", img:"ManuelNeuer"},
-  "PhilippLahm": {desc:"Defensa alemán, elegante y táctico, campeón mundial 2014.", img:"PhilippLahm"},
   "SergioRamos": {desc:"Defensa español, gran capitán del Real Madrid y campeón mundial 2010.", img:"SergioRamos"},
   "GerardPiqué": {desc:"Defensa español del Barcelona, campeón mundial 2010.", img:"GerardPiqué"},
   "CarlesPuyol": {desc:"Defensa español, líder y corazón del Barcelona y España.", img:"CarlesPuyol"},
@@ -189,7 +118,6 @@ const playersData = {
   "RomeluLukaku": {desc:"Delantero belga potente, goleador y líder del Chelsea.", img:"RomeluLukaku"}
 };
 
-// Variables globales
 let chosenPlayer = "";
 let impostorPositions = new Set();
 let totalPlayers = 0;
@@ -217,30 +145,22 @@ document.getElementById("startGame").addEventListener("click", ()=>{
 });
 
 function startNewGame(){
-  // elegir jugador real al azar
   const keys = Object.keys(playersData);
   chosenPlayer = keys[Math.floor(Math.random()*keys.length)];
   impostorPositions.clear();
 
-  // Probabilidades
   const roll = Math.random();
   if(roll < 0.80){
-    // 80% -> 1 impostor
-    const impostor = Math.floor(Math.random() * totalPlayers) + 1;
-    impostorPositions.add(impostor);
+    impostorPositions.add(Math.floor(Math.random() * totalPlayers) + 1);
   } else {
-    // 20% -> se reparte entre 0, 2 o más impostores
     const subRoll = Math.random();
     if(subRoll < 0.33){
-      // 0 impostores
       impostorPositions = new Set();
     } else if(subRoll < 0.66){
-      // 2 impostores
       while(impostorPositions.size < 2){
         impostorPositions.add(Math.floor(Math.random() * totalPlayers) + 1);
       }
     } else {
-      // 3 o más impostores (hasta totalPlayers)
       const impostorCount = Math.floor(Math.random() * (totalPlayers - 2)) + 3;
       while(impostorPositions.size < impostorCount){
         impostorPositions.add(Math.floor(Math.random() * totalPlayers) + 1);
@@ -248,7 +168,6 @@ function startNewGame(){
     }
   }
 
-  // crear botones de jugadores
   buttonsDiv.innerHTML = "";
   for(let i=1;i<=totalPlayers;i++){
     const b=document.createElement("button");
@@ -320,11 +239,21 @@ showImpostorsBtn.addEventListener("click",()=>{
   displayName.textContent="Los impostores eran:";
   displayDesc.textContent="";
   imgWrap.innerHTML="";
+
   impostorPositions.forEach(num=>{
     const p=document.createElement("div");
-    p.textContent="Jugador "+num+(impostorPositions.has(num)?" (Impostor)":"");
+    p.textContent="Jugador "+num+" (Impostor)";
     imgWrap.appendChild(p);
   });
+
+  // 👉 Además mostramos al jugador elegido de la partida
+  const data=playersData[chosenPlayer];
+  const info=document.createElement("div");
+  info.style.marginTop="15px";
+  info.innerHTML="<strong>El jugador real era:</strong> "+chosenPlayer;
+  imgWrap.appendChild(info);
+
+  loadPlayerImage(data.img,(img)=>imgWrap.appendChild(img),()=>imgWrap.appendChild(showPlaceholder("Imagen no encontrada")));
 });
 
 playAgainBtn.addEventListener("click",()=>{ startNewGame(); });
