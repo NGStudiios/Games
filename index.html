@@ -19,6 +19,22 @@ header {
   font-size: 2em;
   font-weight: bold;
   color: #00e5ff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+header a {
+  color: #00e5ff;
+  font-size: 0.6em;
+  text-decoration: none;
+  background: #252525;
+  padding: 5px 10px;
+  border-radius: 5px;
+  transition: background 0.2s ease;
+}
+header a:hover {
+  background: #00e5ff;
+  color: #1f1f1f;
 }
 .container {
   display: grid;
@@ -51,10 +67,16 @@ h2 {
 </style>
 </head>
 <body>
-<header>NGS-Games</header>
+<header>
+  NGS-Games
+  <a href="index.html">Inicio</a>
+</header>
+
 <div class="note">
   Alguno de estos juegos no son originales y son copias de los reales.
 </div>
+
+<!-- Bloque principal de juegos -->
 <div class="container">
   <div class="game">
     <a href="tetrix.html"><img src="l-tetris.png" alt="Tetris"></a>
@@ -84,6 +106,15 @@ h2 {
   <div class="game">
     <a href="cabezones.html"><img src="l-cabezones.png" alt="Cabezones"></a>
     <p>Cabezones de Fútbol</p>
+  </div>
+</div>
+
+<!-- Nuevo bloque para El Impostor -->
+<h2>El Impostor - Fútbol</h2>
+<div class="container">
+  <div class="game">
+    <a href="impostor.html"><img src="l-impostor.png" alt="El Impostor"></a>
+    <p>El Impostor - Fútbol</p>
   </div>
 </div>
 
