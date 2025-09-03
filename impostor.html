@@ -224,19 +224,27 @@ function startNewGame(){
 
   // Probabilidades
   const roll = Math.random();
-  if(roll < 0.05){ 
-    impostorPositions = new Set(); // 0 impostores
-  } else if(roll < 0.10){ 
-    for(let i=1;i<=totalPlayers;i++){ impostorPositions.add(i); } // todos impostores
-  } else if(roll < 0.90){ 
-    const impostorCount = (Math.random()<0.5) ? 1 : 2;
-    while(impostorPositions.size < impostorCount){
-      impostorPositions.add(Math.floor(Math.random()*totalPlayers)+1);
-    }
+  if(roll < 0.80){
+    // 80% -> 1 impostor
+    const impostor = Math.floor(Math.random() * totalPlayers) + 1;
+    impostorPositions.add(impostor);
   } else {
-    const impostorCount = Math.floor(Math.random() * (totalPlayers-4)) + 3;
-    while(impostorPositions.size < impostorCount){
-      impostorPositions.add(Math.floor(Math.random()*totalPlayers)+1);
+    // 20% -> se reparte entre 0, 2 o más impostores
+    const subRoll = Math.random();
+    if(subRoll < 0.33){
+      // 0 impostores
+      impostorPositions = new Set();
+    } else if(subRoll < 0.66){
+      // 2 impostores
+      while(impostorPositions.size < 2){
+        impostorPositions.add(Math.floor(Math.random() * totalPlayers) + 1);
+      }
+    } else {
+      // 3 o más impostores (hasta totalPlayers)
+      const impostorCount = Math.floor(Math.random() * (totalPlayers - 2)) + 3;
+      while(impostorPositions.size < impostorCount){
+        impostorPositions.add(Math.floor(Math.random() * totalPlayers) + 1);
+      }
     }
   }
 
