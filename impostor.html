@@ -7,19 +7,20 @@
 <style>
   body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#0f1724;color:#fff}
   .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-  .panel{background:#111a2a;padding:20px;border-radius:12px;box-shadow:0 0 30px rgba(0,0,0,0.6);max-width:900px;width:100%}
+  .panel{background:#111a2a;padding:20px;border-radius:12px;box-shadow:0 0 30px rgba(0,0,0,0.6);max-width:950px;width:100%}
   h1{color:#00e5ff;text-align:center;margin:0 0 15px}
   .setup{text-align:center}
   .setup input{width:80px;padding:8px;font-size:16px;text-align:center;margin:10px}
-  .btn{background:#00e5ff;border:none;color:#06121a;font-weight:bold;padding:10px 16px;border-radius:8px;cursor:pointer}
+  .btn{background:#00e5ff;border:none;color:#06121a;font-weight:bold;padding:10px 16px;border-radius:8px;cursor:pointer;margin:6px}
   .btn:disabled{opacity:.5;cursor:not-allowed}
   .nums{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:20px 0}
   .num-btn{background:#1c2537;border:none;color:#fff;padding:12px 18px;font-size:18px;border-radius:8px;cursor:pointer}
   .num-btn[disabled]{opacity:.5;cursor:not-allowed}
-  .display{min-height:200px;text-align:center;margin-top:20px}
-  .player-name{font-size:22px;font-weight:bold}
-  .player-image{width:160px;height:160px;border-radius:10px;object-fit:cover;margin-top:12px}
-  .img-placeholder{width:160px;height:160px;border-radius:10px;background:#333;display:flex;align-items:center;justify-content:center;margin:12px auto;color:#bbb;font-size:14px}
+  .display{min-height:260px;text-align:center;margin-top:20px}
+  .player-name{font-size:24px;font-weight:bold;margin-bottom:10px}
+  .player-desc{font-size:15px;color:#ddd;max-width:600px;margin:0 auto 12px}
+  .player-image{width:180px;height:180px;border-radius:10px;object-fit:cover;margin-top:12px}
+  .img-placeholder{width:180px;height:180px;border-radius:10px;background:#333;display:flex;align-items:center;justify-content:center;margin:12px auto;color:#bbb;font-size:14px}
 </style>
 </head>
 <body>
@@ -38,11 +39,13 @@
     <div id="game" style="display:none">
       <div class="nums" id="buttons"></div>
       <div class="display">
-        <div class="player-name" id="displayText"></div>
+        <div class="player-name" id="displayName"></div>
+        <div class="player-desc" id="displayDesc"></div>
         <div id="imgWrap"></div>
-        <p id="statusNote"></p>
+        <div><button class="btn" id="readyBtn" style="display:none">Listo</button></div>
       </div>
       <div style="text-align:center;margin-top:10px">
+        <button class="btn" id="showImpostors" style="display:none">Ver Impostores</button>
         <button class="btn" id="playAgain" style="display:none">Jugar otro</button>
       </div>
     </div>
@@ -50,20 +53,156 @@
 </div>
 
 <script>
-// Lista resumida (puedes pegar aquí la lista larga de jugadores que armamos antes)
-const players = ["Pelé","DiegoMaradona","LionelMessi","CristianoRonaldo","JohanCruyff","ZinedineZidane","Ronaldinho","MichelPlatini","GeorgeBest","FranzBeckenbauer","PaoloMaldini","RobertoBaggio"];
+// Base de datos de jugadores con descripciones breves
+const playersData = {
+  /* Categoría 1 - tus 18 originales */
+  "Pelé": {desc:"El rey del fútbol brasileño, tricampeón mundial con Brasil.", img:"Pelé"},
+  "DiegoMaradona": {desc:"El 10 argentino, campeón del mundo en 1986, ídolo de Nápoles.", img:"DiegoMaradona"},
+  "LionelMessi": {desc:"Crack argentino, múltiples Balones de Oro, campeón mundial 2022.", img:"LionelMessi"},
+  "CristianoRonaldo": {desc:"Estrella portuguesa, máquina de goles, ídolo del Real Madrid y Juventus.", img:"CristianoRonaldo"},
+  "JohanCruyff": {desc:"Genio holandés, creador del fútbol total, leyenda del Ajax y Barcelona.", img:"JohanCruyff"},
+  "ZinedineZidane": {desc:"Elegante francés, campeón mundial 1998 y estrella del Real Madrid.", img:"ZinedineZidane"},
+  "Ronaldinho": {desc:"Mago brasileño, campeón mundial 2002, famoso por su sonrisa y regates.", img:"Ronaldinho"},
+  "MichelPlatini": {desc:"Estrella francesa de los 80, tres veces Balón de Oro, gran estratega.", img:"MichelPlatini"},
+  "GeorgeBest": {desc:"Crack norirlandés, ídolo del Manchester United, famoso por su estilo y talento.", img:"GeorgeBest"},
+  "FranzBeckenbauer": {desc:"El 'Kaiser' alemán, defensor elegante, campeón mundial como jugador y entrenador.", img:"FranzBeckenbauer"},
+  "PaoloMaldini": {desc:"Defensor italiano legendario, símbolo del Milan y de la Selección Italiana.", img:"PaoloMaldini"},
+  "RobertoBaggio": {desc:"Talento italiano de los 90, recordado por su técnica y liderazgo.", img:"RobertoBaggio"},
+  "ThierryHenry": {desc:"Delantero francés, estrella del Arsenal y campeón mundial 1998.", img:"ThierryHenry"},
+  "LuisSuárez": {desc:"Goleador uruguayo, famoso por su instinto en el área y su fuerza.", img:"LuisSuárez"},
+  "Neymar": {desc:"Brasileño habilidoso, estrella del PSG y de Brasil.", img:"Neymar"},
+  "KylianMbappé": {desc:"Joven francés veloz, campeón mundial 2018, goleador nato.", img:"KylianMbappé"},
+  "AndrésIniesta": {desc:"Mediocampista español, clave en la época dorada del Barcelona y España.", img:"AndrésIniesta"},
+  "XaviHernández": {desc:"Maestro del toque español, cerebro del Barcelona y de la Selección.", img:"XaviHernández"},
 
+  /* Categoría 2 - leyendas (sin repetir los anteriores) */
+  "LevYashin": {desc:"Portero soviético, único guardameta Balón de Oro, 'La Araña Negra'.", img:"LevYashin"},
+  "AlfredoDiStefano": {desc:"Ídolo del Real Madrid, delantero elegante y polivalente.", img:"AlfredoDiStefano"},
+  "FerencPuskás": {desc:"Goleador húngaro, leyenda del Real Madrid, famoso por su potente disparo.", img:"FerencPuskás"},
+  "Eusebio": {desc:"El 'Pantera Negra' portugués, goleador histórico y campeón europeo.", img:"Eusebio"},
+  "PaoloRossi": {desc:"Héroe italiano del Mundial 1982, goleador y símbolo del fútbol italiano.", img:"PaoloRossi"},
+  "MarcoVanBasten": {desc:"Delantero holandés elegante, campeón europeo 1988, icono del Milan.", img:"MarcoVanBasten"},
+  "RuudGullit": {desc:"Versátil holandés, campeón europeo con Países Bajos y Milan.", img:"RuudGullit"},
+  "RobertoCarlos": {desc:"Lateral brasileño, famoso por su velocidad y tiros potentes.", img:"RobertoCarlos"},
+  "Cafú": {desc:"Defensor brasileño, campeón mundial 1994 y 2002, incansable por la banda.", img:"Cafú"},
+  "FrancoBaresi": {desc:"Defensa italiano legendario, símbolo del Milan y estratega defensivo.", img:"FrancoBaresi"},
+  "DinoZoff": {desc:"Portero italiano, campeón mundial 1982, ejemplo de longevidad y liderazgo.", img:"DinoZoff"},
+  "BobbyCharlton": {desc:"Leyenda inglesa del Manchester United y campeón mundial 1966.", img:"BobbyCharlton"},
+  "DenisLaw": {desc:"Ídolo escocés del Manchester United, gran goleador en los 60s.", img:"DenisLaw"},
+  "GerdMüller": {desc:"Máquina de goles alemana, campeón mundial 1974.", img:"GerdMüller"},
+  "JohanNeeskens": {desc:"Holandés clave en el fútbol total, talentoso mediocampista.", img:"JohanNeeskens"},
+  "RaymondKopa": {desc:"Francés, campeón del mundo 1958, estrella del Real Madrid.", img:"RaymondKopa"},
+  "KarlHeinzRummenigge": {desc:"Delantero alemán, estrella de los 80 y Balón de Oro.", img:"KarlHeinzRummenigge"},
+  "Sócrates": {desc:"Mediocampista brasileño, líder y pensador dentro y fuera de la cancha.", img:"Sócrates"},
+  "Zico": {desc:"Mago brasileño, excelente goleador y creador de juego.", img:"Zico"},
+  "Romário": {desc:"Delantero brasileño, campeón mundial 1994, famoso por su técnica.", img:"Romário"},
+  "Rivaldo": {desc:"Brasileño habilidoso, campeón mundial 2002, gran goleador.", img:"Rivaldo"},
+  "Garrincha": {desc:"Extremo brasileño, genio del regate, campeón mundial 1958 y 1962.", img:"Garrincha"},
+  "Didi": {desc:"Mediocampista brasileño, cerebro del equipo campeón 1958 y 1962.", img:"Didi"},
+  "Tostão": {desc:"Delantero brasileño inteligente y goleador del Mundial 1970.", img:"Tostão"},
+  "Clodoaldo": {desc:"Mediocampista brasileño, campeón mundial 1970, gran pasador.", img:"Clodoaldo"},
+  "CarlosValderrama": {desc:"Ícono colombiano, famoso por su visión y su melena inconfundible.", img:"CarlosValderrama"},
+  "RenéHiguita": {desc:"Portero colombiano excéntrico, conocido por su estilo arriesgado.", img:"RenéHiguita"},
+  "DanielPassarella": {desc:"Defensa argentino, campeón mundial 1978, gran líder.", img:"DanielPassarella"},
+  "OscarRuggeri": {desc:"Defensor argentino, campeón mundial 1986, sólido y contundente.", img:"OscarRuggeri"},
+  "MarioKempes": {desc:"Delantero argentino, campeón mundial 1978, goleador del torneo.", img:"MarioKempes"},
+  "EnzoFrancescoli": {desc:"Uruguayo elegante, mediocampista creativo de los 80s y 90s.", img:"EnzoFrancescoli"},
+  "ArielOrtega": {desc:"Talentoso argentino, regateador y estrella de River Plate.", img:"ArielOrtega"},
+  "FernandoRedondo": {desc:"Mediocampista argentino, elegante y táctico, símbolo del Real Madrid.", img:"FernandoRedondo"},
+  "IvánZamorano": {desc:"Delantero chileno goleador, líder de la Roja y del Inter de Milán.", img:"IvánZamorano"},
+  "MarceloSalas": {desc:"Delantero chileno potente, ídolo en Lazio y Juventus.", img:"MarceloSalas"},
+  "HristoStoichkov": {desc:"Búlgaro habilidoso, estrella del Barcelona de los 90s.", img:"HristoStoichkov"},
+  "RobertoDonadoni": {desc:"Mediocampista italiano, gran pasador y ganador de múltiples títulos.", img:"RobertoDonadoni"},
+  "GianniRivera": {desc:"Delantero italiano elegante, Balón de Oro y estrella del Milan.", img:"GianniRivera"},
+  "AlessandroAltobelli": {desc:"Delantero italiano, campeón mundial 1982, goleador nato.", img:"AlessandroAltobelli"},
+  "GiuseppeMeazza": {desc:"Delantero italiano legendario, símbolo del Inter y Milan.", img:"GiuseppeMeazza"},
+  "OmarSivori": {desc:"Delantero argentino-italiano, habilidoso y goleador.", img:"OmarSivori"},
+  "AntonioCabrini": {desc:"Defensa italiano, campeón mundial 1982, buen lateral izquierdo.", img:"AntonioCabrini"},
+  "GiancarloAntognoni": {desc:"Mediocampista italiano, líder y estrella de la Fiorentina.", img:"GiancarloAntognoni"},
+  "JoseManuelMoreno": {desc:"Delantero argentino, campeón de América y Europa, leyenda de River.", img:"JoseManuelMoreno"},
+
+  /* Categoría 3 - jugadores actuales / recientes (sin repetir) */
+  "IkerCasillas": {desc:"Portero español, campeón mundial 2010, símbolo del Real Madrid.", img:"IkerCasillas"},
+  "GianluigiBuffon": {desc:"Portero italiano, campeón mundial 2006, figura de la Juventus.", img:"GianluigiBuffon"},
+  "ManuelNeuer": {desc:"Portero alemán moderno, ágil y seguro, campeón mundial 2014.", img:"ManuelNeuer"},
+  "PhilippLahm": {desc:"Defensa alemán, elegante y táctico, campeón mundial 2014.", img:"PhilippLahm"},
+  "SergioRamos": {desc:"Defensa español, gran capitán del Real Madrid y campeón mundial 2010.", img:"SergioRamos"},
+  "GerardPiqué": {desc:"Defensa español del Barcelona, campeón mundial 2010.", img:"GerardPiqué"},
+  "CarlesPuyol": {desc:"Defensa español, líder y corazón del Barcelona y España.", img:"CarlesPuyol"},
+  "DaniAlves": {desc:"Defensa brasileño, incansable, campeón mundial 2002.", img:"DaniAlves"},
+  "MarceloVieira": {desc:"Lateral brasileño ofensivo, estrella del Real Madrid.", img:"MarceloVieira"},
+  "ThiagoSilva": {desc:"Defensa brasileño, sólido y seguro, líder en defensa.", img:"ThiagoSilva"},
+  "Marquinhos": {desc:"Defensa brasileño del PSG, versátil y rápido.", img:"Marquinhos"},
+  "DavidDeGea": {desc:"Portero español, ágil y seguro, estrella del Manchester United.", img:"DavidDeGea"},
+  "AlissonBecker": {desc:"Portero brasileño del Liverpool, seguro y rápido.", img:"AlissonBecker"},
+  "EdersonMoraes": {desc:"Portero brasileño, gran reflejos y juego con los pies.", img:"EdersonMoraes"},
+  "LukaModrić": {desc:"Mediocampista croata, elegante y táctico, Balón de Oro 2018.", img:"LukaModrić"},
+  "ToniKroos": {desc:"Mediocampista alemán, preciso y líder en el Real Madrid.", img:"ToniKroos"},
+  "KevinDeBruyne": {desc:"Mediocampista belga, creativo y goleador, estrella del City.", img:"KevinDeBruyne"},
+  "N’GoloKanté": {desc:"Mediocampista francés incansable, campeón mundial 2018.", img:"N’GoloKanté"},
+  "PaulPogba": {desc:"Mediocampista francés, poderoso y creativo.", img:"PaulPogba"},
+  "BrunoFernandes": {desc:"Mediocampista portugués del Manchester United, creativo y goleador.", img:"BrunoFernandes"},
+  "JoshuaKimmich": {desc:"Mediocampista alemán versátil y táctico del Bayern.", img:"JoshuaKimmich"},
+  "LeonGoretzka": {desc:"Mediocampista alemán potente, destacado en el Bayern.", img:"LeonGoretzka"},
+  "FrenkieDeJong": {desc:"Mediocampista holandés, creativo y moderno del Barcelona.", img:"FrenkieDeJong"},
+  "MatthijsDeLigt": {desc:"Defensa holandés, sólido y joven, estrella de la Juventus.", img:"MatthijsDeLigt"},
+  "VirgilVanDijk": {desc:"Defensa holandés del Liverpool, fuerte y seguro.", img:"VirgilVanDijk"},
+  "ErlingHaaland": {desc:"Delantero noruego goleador, estrella del Manchester City.", img:"ErlingHaaland"},
+  "RobertLewandowski": {desc:"Delantero polaco goleador, figura del Barcelona y Bayern.", img:"RobertLewandowski"},
+  "KarimBenzema": {desc:"Delantero francés, elegante y goleador, Balón de Oro 2022.", img:"KarimBenzema"},
+  "HarryKane": {desc:"Delantero inglés, goleador nato y líder del Tottenham.", img:"HarryKane"},
+  "RaheemSterling": {desc:"Delantero inglés rápido y habilidoso.", img:"RaheemSterling"},
+  "SonHeung-min": {desc:"Delantero surcoreano, estrella del Tottenham, rápido y preciso.", img:"SonHeung-min"},
+  "JadonSancho": {desc:"Extremo inglés joven y habilidoso, figura del Manchester United.", img:"JadonSancho"},
+  "MarcusRashford": {desc:"Delantero inglés, rápido y habilidoso, estrella del Manchester United.", img:"MarcusRashford"},
+  "ViníciusJúnior": {desc:"Delantero brasileño joven del Real Madrid, habilidoso y rápido.", img:"ViníciusJúnior"},
+  "RodrygoGoes": {desc:"Delantero brasileño del Real Madrid, joven y prometedor.", img:"RodrygoGoes"},
+  "Casemiro": {desc:"Mediocampista brasileño del Real Madrid, sólido y estratégico.", img:"Casemiro"},
+  "EdinsonCavani": {desc:"Delantero uruguayo, potente y goleador, ídolo en PSG y Manchester.", img:"EdinsonCavani"},
+  "GabrielJesus": {desc:"Delantero brasileño joven, habilidoso y veloz.", img:"GabrielJesus"},
+  "PhilippeCoutinho": {desc:"Mediocampista brasileño creativo y habilidoso.", img:"PhilippeCoutinho"},
+  "BernardoSilva": {desc:"Mediocampista portugués, técnico y veloz, estrella del City.", img:"BernardoSilva"},
+  "JoãoFélix": {desc:"Delantero portugués joven, habilidoso, promesa del Atlético de Madrid.", img:"JoãoFélix"},
+  "AntoineGriezmann": {desc:"Delantero francés, creativo y goleador, campeón mundial 2018.", img:"AntoineGriezmann"},
+  "OlivierGiroud": {desc:"Delantero francés, fuerte y goleador, campeón mundial 2018.", img:"OlivierGiroud"},
+  "EdenHazard": {desc:"Delantero belga habilidoso, estrella del Real Madrid.", img:"EdenHazard"},
+  "ThomasMüller": {desc:"Delantero alemán versátil, goleador y asistidor del Bayern.", img:"ThomasMüller"},
+  "LeroySané": {desc:"Extremo alemán rápido y habilidoso del Bayern.", img:"LeroySané"},
+  "KaiHavertz": {desc:"Mediocampista alemán joven, creativo y técnico.", img:"KaiHavertz"},
+  "TimoWerner": {desc:"Delantero alemán rápido y habilidoso, juega en Chelsea.", img:"TimoWerner"},
+  "AntonioRüdiger": {desc:"Defensa alemán fuerte, seguro y rápido.", img:"AntonioRüdiger"},
+  "HarryMaguire": {desc:"Defensa inglés, sólido y capitán del Manchester United.", img:"HarryMaguire"},
+  "MasonMount": {desc:"Mediocampista inglés, creativo y joven del Chelsea.", img:"MasonMount"},
+  "PhilFoden": {desc:"Mediocampista inglés joven, habilidoso y creativo.", img:"PhilFoden"},
+  "JackGrealish": {desc:"Mediocampista inglés, habilidoso y creativo del Manchester City.", img:"JackGrealish"},
+  "RodriHernández": {desc:"Mediocampista español, táctico y seguro del City.", img:"RodriHernández"},
+  "EduardoCamavinga": {desc:"Mediocampista francés joven, veloz y creativo.", img:"EduardoCamavinga"},
+  "JudeBellingham": {desc:"Mediocampista inglés joven y talentoso, líder emergente.", img:"JudeBellingham"},
+  "Pedri": {desc:"Mediocampista español joven del Barcelona, creativo y talentoso.", img:"Pedri"},
+  "Gavi": {desc:"Mediocampista español, joven y dinámico del Barcelona.", img:"Gavi"},
+  "AnsuFati": {desc:"Delantero español joven del Barcelona, rápido y habilidoso.", img:"AnsuFati"},
+  "Raphinha": {desc:"Delantero brasileño habilidoso, veloz y técnico.", img:"Raphinha"},
+  "Richarlison": {desc:"Delantero brasileño potente, rápido y goleador.", img:"Richarlison"},
+  "LautaroMartínez": {desc:"Delantero argentino, goleador y joven estrella del Inter.", img:"LautaroMartínez"},
+  "PauloDybala": {desc:"Delantero argentino habilidoso, creativo y goleador.", img:"PauloDybala"},
+  "JamesRodríguez": {desc:"Mediocampista colombiano, creativo y goleador.", img:"JamesRodríguez"},
+  "RomeluLukaku": {desc:"Delantero belga potente, goleador y líder del Chelsea.", img:"RomeluLukaku"}
+};
+
+// Variables globales
 let chosenPlayer = "";
-let impostorPosition = 0;
+let impostorPositions = new Set();
 let totalPlayers = 0;
 
 const setupDiv = document.getElementById("setup");
 const gameDiv = document.getElementById("game");
 const buttonsDiv = document.getElementById("buttons");
-const displayText = document.getElementById("displayText");
+const displayName = document.getElementById("displayName");
+const displayDesc = document.getElementById("displayDesc");
 const imgWrap = document.getElementById("imgWrap");
-const statusNote = document.getElementById("statusNote");
+const readyBtn = document.getElementById("readyBtn");
 const playAgainBtn = document.getElementById("playAgain");
+const showImpostorsBtn = document.getElementById("showImpostors");
 
 document.getElementById("startGame").addEventListener("click", ()=>{
   const count = parseInt(document.getElementById("playerCount").value,10);
@@ -78,10 +217,30 @@ document.getElementById("startGame").addEventListener("click", ()=>{
 });
 
 function startNewGame(){
-  chosenPlayer = players[Math.floor(Math.random()*players.length)];
-  impostorPosition = Math.floor(Math.random()*totalPlayers) + 1;
+  // elegir jugador real al azar
+  const keys = Object.keys(playersData);
+  chosenPlayer = keys[Math.floor(Math.random()*keys.length)];
+  impostorPositions.clear();
 
-  // crear botones
+  // Probabilidades
+  const roll = Math.random();
+  if(roll < 0.05){ 
+    impostorPositions = new Set(); // 0 impostores
+  } else if(roll < 0.10){ 
+    for(let i=1;i<=totalPlayers;i++){ impostorPositions.add(i); } // todos impostores
+  } else if(roll < 0.90){ 
+    const impostorCount = (Math.random()<0.5) ? 1 : 2;
+    while(impostorPositions.size < impostorCount){
+      impostorPositions.add(Math.floor(Math.random()*totalPlayers)+1);
+    }
+  } else {
+    const impostorCount = Math.floor(Math.random() * (totalPlayers-4)) + 3;
+    while(impostorPositions.size < impostorCount){
+      impostorPositions.add(Math.floor(Math.random()*totalPlayers)+1);
+    }
+  }
+
+  // crear botones de jugadores
   buttonsDiv.innerHTML = "";
   for(let i=1;i<=totalPlayers;i++){
     const b=document.createElement("button");
@@ -91,10 +250,12 @@ function startNewGame(){
     buttonsDiv.appendChild(b);
   }
 
-  displayText.textContent="";
+  displayName.textContent="";
+  displayDesc.textContent="";
   imgWrap.innerHTML="";
-  statusNote.textContent="Toca un número para revelar.";
+  readyBtn.style.display="none";
   playAgainBtn.style.display="none";
+  showImpostorsBtn.style.display="none";
 }
 
 function loadPlayerImage(name,onSuccess,onFail){
@@ -116,26 +277,49 @@ function showPlaceholder(text){
 
 function revealNumber(num,btn){
   btn.disabled=true;
-  displayText.textContent="";
+  displayName.textContent="";
+  displayDesc.textContent="";
   imgWrap.innerHTML="";
-  if(num===impostorPosition){
-    displayText.textContent="IMPOSTOR";
+
+  if(impostorPositions.has(num)){
+    displayName.textContent="IMPOSTOR";
+    displayDesc.textContent="Mantente en secreto... ¡Engaña a todos!";
     loadPlayerImage("Impostor",(img)=>imgWrap.appendChild(img),()=>imgWrap.appendChild(showPlaceholder("Impostor no encontrado")));
-    statusNote.textContent=`El impostor estaba en ${num}`;
   }else{
-    displayText.textContent=chosenPlayer;
-    loadPlayerImage(chosenPlayer,(img)=>imgWrap.appendChild(img),()=>imgWrap.appendChild(showPlaceholder("Imagen no encontrada")));
-    statusNote.textContent=`Posición ${num}: ${chosenPlayer}`;
+    const data=playersData[chosenPlayer];
+    displayName.textContent=chosenPlayer;
+    displayDesc.textContent=data.desc;
+    loadPlayerImage(data.img,(img)=>imgWrap.appendChild(img),()=>imgWrap.appendChild(showPlaceholder("Imagen no encontrada")));
   }
 
-  // Si todos fueron clickeados -> fin
-  const allDisabled=[...buttonsDiv.querySelectorAll("button")].every(b=>b.disabled);
-  if(allDisabled) playAgainBtn.style.display="inline-block";
+  readyBtn.style.display="inline-block";
+
+  readyBtn.onclick=()=>{
+    displayName.textContent="";
+    displayDesc.textContent="";
+    imgWrap.innerHTML="";
+    readyBtn.style.display="none";
+
+    const allDisabled=[...buttonsDiv.querySelectorAll("button")].every(b=>b.disabled);
+    if(allDisabled){
+      showImpostorsBtn.style.display="inline-block";
+      playAgainBtn.style.display="inline-block";
+    }
+  };
 }
 
-playAgainBtn.addEventListener("click",()=>{
-  startNewGame();
+showImpostorsBtn.addEventListener("click",()=>{
+  displayName.textContent="Los impostores eran:";
+  displayDesc.textContent="";
+  imgWrap.innerHTML="";
+  impostorPositions.forEach(num=>{
+    const p=document.createElement("div");
+    p.textContent="Jugador "+num+(impostorPositions.has(num)?" (Impostor)":"");
+    imgWrap.appendChild(p);
+  });
 });
+
+playAgainBtn.addEventListener("click",()=>{ startNewGame(); });
 </script>
 </body>
 </html>
