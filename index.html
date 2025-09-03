@@ -13,6 +13,7 @@ body {
   margin: 0;
   padding: 0;
 }
+
 header {
   background: #1f1f1f;
   padding: 20px;
@@ -23,6 +24,7 @@ header {
   justify-content: space-between;
   align-items: center;
 }
+
 header a {
   color: #00e5ff;
   font-size: 0.6em;
@@ -32,20 +34,26 @@ header a {
   border-radius: 5px;
   transition: background 0.2s ease;
 }
+
 header a:hover {
   background: #00e5ff;
   color: #1f1f1f;
 }
+
 .note {
   margin-top: 10px;
   font-size: 0.9em;
   color: #bbb;
 }
+
 h2 {
   margin-top: 40px;
+  text-align: left;
+  padding-left: 20px;
+  color: #00e5ff;
 }
 
-/* GRID UNIFORME PARA TODOS LOS CONTAINERS */
+/* GRID UNIFORME PARA TODOS LOS JUEGOS */
 .container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -59,8 +67,8 @@ h2 {
   background: #1e1e1e;
   border-radius: 10px;
   padding: 10px;
-  width: 180px;     
-  height: 250px;    
+  width: 180px;
+  height: 250px;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -75,9 +83,9 @@ h2 {
 
 /* IMAGEN AJUSTADA */
 .game img {
-  width: 80%;         
+  width: 80%;
   height: auto;
-  max-height: 140px;  
+  max-height: 140px;
   object-fit: contain;
   border-radius: 8px;
   margin-bottom: 10px;
@@ -110,7 +118,7 @@ h2 {
   Alguno de estos juegos no son originales y son copias de los reales.
 </div>
 
-<!-- BLOQUE PRINCIPAL DE JUEGOS -->
+<!-- TÍTULO SECCIÓN PRINCIPAL -->
 <h2>Juegos principales</h2>
 <div class="container">
   <div class="game">
@@ -133,20 +141,14 @@ h2 {
     <a href="racing.html"><img src="l-racing.png" alt="Racing"></a>
     <p>Mini Racing</p>
   </div>
-</div>
 
-<!-- Cabezones de fútbol -->
-<h2>Cabezones de fútbol</h2>
-<div class="container">
+  <!-- Cabezones -->
   <div class="game">
     <a href="cabezones.html"><img src="l-cabezones.png" alt="Cabezones"></a>
     <p>Cabezones de Fútbol</p>
   </div>
-</div>
 
-<!-- El Impostor -->
-<h2>El Impostor - Fútbol</h2>
-<div class="container">
+  <!-- El Impostor -->
   <div class="game">
     <a href="impostor.html"><img src="l-impostor.png" alt="El Impostor"></a>
     <p>El Impostor - Fútbol</p>
