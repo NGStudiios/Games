@@ -20,6 +20,7 @@
       -webkit-tap-highlight-color: transparent;
       user-select: none;
       transition: background-color 1s ease;
+      position: relative;
     }
 
     body.night {
@@ -60,6 +61,7 @@
       display: none;
       text-align: center;
       transition: color 1s ease;
+      z-index: 20;
     }
 
     body.night #gameOverText {
@@ -77,6 +79,7 @@
       display: none;
       text-align: center;
       transition: color 1s ease;
+      z-index: 20;
     }
 
     body.night #restartHint {
@@ -94,6 +97,7 @@
       font-family: 'Courier New', Courier, monospace;
       letter-spacing: 3px;
       transition: color 1s ease;
+      z-index: 20;
     }
 
     body.night #score {
@@ -112,10 +116,64 @@
       font-weight: 500;
       font-family: 'Arial', sans-serif;
       transition: color 1s ease;
+      z-index: 20;
+      max-width: 90vw;
+      text-align: center;
     }
 
     body.night #instructions {
       color: #bbb;
+    }
+
+    /* Controls container */
+    #mobileControls {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 20px;
+      z-index: 30;
+      max-width: 90vw;
+      width: 400px;
+      justify-content: center;
+    }
+
+    /* Buttons */
+    .control-button {
+      background-color: #535353;
+      color: white;
+      font-size: 1.5rem;
+      padding: 14px 20px;
+      border-radius: 12px;
+      user-select: none;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+      transition: background-color 0.3s ease;
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      touch-action: manipulation;
+    }
+
+    .control-button:active {
+      background-color: #777;
+    }
+
+    body.night .control-button {
+      background-color: #ddd;
+      color: #1a1a2e;
+    }
+
+    body.night .control-button:active {
+      background-color: #bbb;
+    }
+
+    /* Hide controls on large screens */
+    @media (min-width: 768px) {
+      #mobileControls {
+        display: none;
+      }
     }
   </style>
 </head>
@@ -126,6 +184,15 @@
     <div id="gameOverText" role="alert" aria-live="assertive">GAME OVER</div>
     <div id="restartHint">Presiona ESPACIO o Toca para reiniciar</div>
     <div id="instructions">Presiona ESPACIO o toca la pantalla para saltar, o flecha abajo para agacharte</div>
+  </div>
+
+  <div id="mobileControls" aria-label="Controles del juego para dispositivos móviles">
+    <button id="btnJump" class="control-button" aria-label="Botón para saltar">
+      <i class="fas fa-arrow-up"></i> Saltar
+    </button>
+    <button id="btnDuck" class="control-button" aria-label="Botón para agacharse">
+      <i class="fas fa-arrow-down"></i> Agacharse
+    </button>
   </div>
 
   <script>
@@ -219,6 +286,10 @@
       const scoreEl = document.getElementById('score');
       const gameOverText = document.getElementById('gameOverText');
       const restartHint = document.getElementById('restartHint');
+
+      // Mobile control buttons
+      const btnJump = document.getElementById('btnJump');
+      const btnDuck = document.getElementById('btnDuck');
 
       // Utility functions
       function randomBetween(min, max) {
@@ -931,6 +1002,42 @@
       window.addEventListener('touchend', (e) => {
         duckEnd();
         touchStartY = null;
+      });
+
+      // Mobile buttons events
+      btnJump.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        jump();
+      }, { passive: false });
+
+      btnJump.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        jump();
+      });
+
+      btnDuck.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        duckStart();
+      }, { passive: false });
+
+      btnDuck.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        duckEnd();
+      }, { passive: false });
+
+      btnDuck.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        duckStart();
+      });
+
+      btnDuck.addEventListener('mouseup', (e) => {
+        e.preventDefault();
+        duckEnd();
+      });
+
+      btnDuck.addEventListener('mouseleave', (e) => {
+        e.preventDefault();
+        duckEnd();
       });
 
       // Initialize
