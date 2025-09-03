@@ -1,262 +1,35 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>El Impostor - Fútbol</title>
-<style>
-  body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#0f1724;color:#fff}
-  .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-  .panel{background:#111a2a;padding:20px;border-radius:12px;box-shadow:0 0 30px rgba(0,0,0,0.6);max-width:950px;width:100%}
-  h1{color:#00e5ff;text-align:center;margin:0 0 15px}
-  .setup{text-align:center}
-  .setup input{width:80px;padding:8px;font-size:16px;text-align:center;margin:10px}
-  .btn{background:#00e5ff;border:none;color:#06121a;font-weight:bold;padding:10px 16px;border-radius:8px;cursor:pointer;margin:6px}
-  .btn:disabled{opacity:.5;cursor:not-allowed}
-  .nums{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:20px 0}
-  .num-btn{background:#1c2537;border:none;color:#fff;padding:12px 18px;font-size:18px;border-radius:8px;cursor:pointer}
-  .num-btn[disabled]{opacity:.5;cursor:not-allowed}
-  .display{min-height:260px;text-align:center;margin-top:20px}
-  .player-name{font-size:24px;font-weight:bold;margin-bottom:10px}
-  .player-desc{font-size:15px;color:#ddd;max-width:600px;margin:0 auto 12px}
-  .player-image{width:180px;height:180px;border-radius:10px;object-fit:cover;margin-top:12px}
-  .img-placeholder{width:180px;height:180px;border-radius:10px;background:#333;display:flex;align-items:center;justify-content:center;margin:12px auto;color:#bbb;font-size:14px}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página en Mejora</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            text-align: center;
+        }
+        .message {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+        }
+    </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="panel">
-    <h1>El Impostor - Fútbol</h1>
-
-    <!-- Pantalla de configuración -->
-    <div id="setup" class="setup">
-      <p>Elige la cantidad de jugadores (mínimo 3):</p>
-      <input type="number" id="playerCount" min="3" value="5" />
-      <button class="btn" id="startGame">Comenzar</button>
+    <div class="message">
+        <h1>Se está mejorando esta página</h1>
+        <p>Espera la nueva actualización</p>
     </div>
-
-    <!-- Pantalla del juego -->
-    <div id="game" style="display:none">
-      <div class="nums" id="buttons"></div>
-      <div class="display">
-        <div class="player-name" id="displayName"></div>
-        <div class="player-desc" id="displayDesc"></div>
-        <div id="imgWrap"></div>
-        <div><button class="btn" id="readyBtn" style="display:none">Listo</button></div>
-      </div>
-      <div style="text-align:center;margin-top:10px">
-        <button class="btn" id="showImpostors" style="display:none">Ver Impostores</button>
-        <button class="btn" id="playAgain" style="display:none">Jugar otro</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-// Base de datos de jugadores
-const playersData = {
-  "SergioRamos": {desc:"Defensa español, gran capitán del Real Madrid y campeón mundial 2010.", img:"SergioRamos"},
-  "GerardPiqué": {desc:"Defensa español del Barcelona, campeón mundial 2010.", img:"GerardPiqué"},
-  "CarlesPuyol": {desc:"Defensa español, líder y corazón del Barcelona y España.", img:"CarlesPuyol"},
-  "DaniAlves": {desc:"Defensa brasileño, incansable, campeón mundial 2002.", img:"DaniAlves"},
-  "MarceloVieira": {desc:"Lateral brasileño ofensivo, estrella del Real Madrid.", img:"MarceloVieira"},
-  "ThiagoSilva": {desc:"Defensa brasileño, sólido y seguro, líder en defensa.", img:"ThiagoSilva"},
-  "Marquinhos": {desc:"Defensa brasileño del PSG, versátil y rápido.", img:"Marquinhos"},
-  "DavidDeGea": {desc:"Portero español, ágil y seguro, estrella del Manchester United.", img:"DavidDeGea"},
-  "AlissonBecker": {desc:"Portero brasileño del Liverpool, seguro y rápido.", img:"AlissonBecker"},
-  "EdersonMoraes": {desc:"Portero brasileño, gran reflejos y juego con los pies.", img:"EdersonMoraes"},
-  "LukaModrić": {desc:"Mediocampista croata, elegante y táctico, Balón de Oro 2018.", img:"LukaModrić"},
-  "ToniKroos": {desc:"Mediocampista alemán, preciso y líder en el Real Madrid.", img:"ToniKroos"},
-  "KevinDeBruyne": {desc:"Mediocampista belga, creativo y goleador, estrella del City.", img:"KevinDeBruyne"},
-  "N’GoloKanté": {desc:"Mediocampista francés incansable, campeón mundial 2018.", img:"N’GoloKanté"},
-  "PaulPogba": {desc:"Mediocampista francés, poderoso y creativo.", img:"PaulPogba"},
-  "BrunoFernandes": {desc:"Mediocampista portugués del Manchester United, creativo y goleador.", img:"BrunoFernandes"},
-  "JoshuaKimmich": {desc:"Mediocampista alemán versátil y táctico del Bayern.", img:"JoshuaKimmich"},
-  "LeonGoretzka": {desc:"Mediocampista alemán potente, destacado en el Bayern.", img:"LeonGoretzka"},
-  "FrenkieDeJong": {desc:"Mediocampista holandés, creativo y moderno del Barcelona.", img:"FrenkieDeJong"},
-  "MatthijsDeLigt": {desc:"Defensa holandés, sólido y joven, estrella de la Juventus.", img:"MatthijsDeLigt"},
-  "VirgilVanDijk": {desc:"Defensa holandés del Liverpool, fuerte y seguro.", img:"VirgilVanDijk"},
-  "ErlingHaaland": {desc:"Delantero noruego goleador, estrella del Manchester City.", img:"ErlingHaaland"},
-  "RobertLewandowski": {desc:"Delantero polaco goleador, figura del Barcelona y Bayern.", img:"RobertLewandowski"},
-  "KarimBenzema": {desc:"Delantero francés, elegante y goleador, Balón de Oro 2022.", img:"KarimBenzema"},
-  "HarryKane": {desc:"Delantero inglés, goleador nato y líder del Tottenham.", img:"HarryKane"},
-  "RaheemSterling": {desc:"Delantero inglés rápido y habilidoso.", img:"RaheemSterling"},
-  "SonHeung-min": {desc:"Delantero surcoreano, estrella del Tottenham, rápido y preciso.", img:"SonHeung-min"},
-  "JadonSancho": {desc:"Extremo inglés joven y habilidoso, figura del Manchester United.", img:"JadonSancho"},
-  "MarcusRashford": {desc:"Delantero inglés, rápido y habilidoso, estrella del Manchester United.", img:"MarcusRashford"},
-  "ViníciusJúnior": {desc:"Delantero brasileño joven del Real Madrid, habilidoso y rápido.", img:"ViníciusJúnior"},
-  "RodrygoGoes": {desc:"Delantero brasileño del Real Madrid, joven y prometedor.", img:"RodrygoGoes"},
-  "Casemiro": {desc:"Mediocampista brasileño del Real Madrid, sólido y estratégico.", img:"Casemiro"},
-  "EdinsonCavani": {desc:"Delantero uruguayo, potente y goleador, ídolo en PSG y Manchester.", img:"EdinsonCavani"},
-  "GabrielJesus": {desc:"Delantero brasileño joven, habilidoso y veloz.", img:"GabrielJesus"},
-  "PhilippeCoutinho": {desc:"Mediocampista brasileño creativo y habilidoso.", img:"PhilippeCoutinho"},
-  "BernardoSilva": {desc:"Mediocampista portugués, técnico y veloz, estrella del City.", img:"BernardoSilva"},
-  "JoãoFélix": {desc:"Delantero portugués joven, habilidoso, promesa del Atlético de Madrid.", img:"JoãoFélix"},
-  "AntoineGriezmann": {desc:"Delantero francés, creativo y goleador, campeón mundial 2018.", img:"AntoineGriezmann"},
-  "OlivierGiroud": {desc:"Delantero francés, fuerte y goleador, campeón mundial 2018.", img:"OlivierGiroud"},
-  "EdenHazard": {desc:"Delantero belga habilidoso, estrella del Real Madrid.", img:"EdenHazard"},
-  "ThomasMüller": {desc:"Delantero alemán versátil, goleador y asistidor del Bayern.", img:"ThomasMüller"},
-  "LeroySané": {desc:"Extremo alemán rápido y habilidoso del Bayern.", img:"LeroySané"},
-  "KaiHavertz": {desc:"Mediocampista alemán joven, creativo y técnico.", img:"KaiHavertz"},
-  "TimoWerner": {desc:"Delantero alemán rápido y habilidoso, juega en Chelsea.", img:"TimoWerner"},
-  "AntonioRüdiger": {desc:"Defensa alemán fuerte, seguro y rápido.", img:"AntonioRüdiger"},
-  "HarryMaguire": {desc:"Defensa inglés, sólido y capitán del Manchester United.", img:"HarryMaguire"},
-  "MasonMount": {desc:"Mediocampista inglés, creativo y joven del Chelsea.", img:"MasonMount"},
-  "PhilFoden": {desc:"Mediocampista inglés joven, habilidoso y creativo.", img:"PhilFoden"},
-  "JackGrealish": {desc:"Mediocampista inglés, habilidoso y creativo del Manchester City.", img:"JackGrealish"},
-  "RodriHernández": {desc:"Mediocampista español, táctico y seguro del City.", img:"RodriHernández"},
-  "EduardoCamavinga": {desc:"Mediocampista francés joven, veloz y creativo.", img:"EduardoCamavinga"},
-  "JudeBellingham": {desc:"Mediocampista inglés joven y talentoso, líder emergente.", img:"JudeBellingham"},
-  "Pedri": {desc:"Mediocampista español joven del Barcelona, creativo y talentoso.", img:"Pedri"},
-  "Gavi": {desc:"Mediocampista español, joven y dinámico del Barcelona.", img:"Gavi"},
-  "AnsuFati": {desc:"Delantero español joven del Barcelona, rápido y habilidoso.", img:"AnsuFati"},
-  "Raphinha": {desc:"Delantero brasileño habilidoso, veloz y técnico.", img:"Raphinha"},
-  "Richarlison": {desc:"Delantero brasileño potente, rápido y goleador.", img:"Richarlison"},
-  "LautaroMartínez": {desc:"Delantero argentino, goleador y joven estrella del Inter.", img:"LautaroMartínez"},
-  "PauloDybala": {desc:"Delantero argentino habilidoso, creativo y goleador.", img:"PauloDybala"},
-  "JamesRodríguez": {desc:"Mediocampista colombiano, creativo y goleador.", img:"JamesRodríguez"},
-  "RomeluLukaku": {desc:"Delantero belga potente, goleador y líder del Chelsea.", img:"RomeluLukaku"}
-};
-
-let chosenPlayer = "";
-let impostorPositions = new Set();
-let totalPlayers = 0;
-
-const setupDiv = document.getElementById("setup");
-const gameDiv = document.getElementById("game");
-const buttonsDiv = document.getElementById("buttons");
-const displayName = document.getElementById("displayName");
-const displayDesc = document.getElementById("displayDesc");
-const imgWrap = document.getElementById("imgWrap");
-const readyBtn = document.getElementById("readyBtn");
-const playAgainBtn = document.getElementById("playAgain");
-const showImpostorsBtn = document.getElementById("showImpostors");
-
-document.getElementById("startGame").addEventListener("click", ()=>{
-  const count = parseInt(document.getElementById("playerCount").value,10);
-  if(isNaN(count) || count<3){
-    alert("Debes elegir al menos 3 jugadores.");
-    return;
-  }
-  totalPlayers = count;
-  startNewGame();
-  setupDiv.style.display="none";
-  gameDiv.style.display="block";
-});
-
-function startNewGame(){
-  const keys = Object.keys(playersData);
-  chosenPlayer = keys[Math.floor(Math.random()*keys.length)];
-  impostorPositions.clear();
-
-  const roll = Math.random();
-  if(roll < 0.80){
-    impostorPositions.add(Math.floor(Math.random() * totalPlayers) + 1);
-  } else {
-    const subRoll = Math.random();
-    if(subRoll < 0.33){
-      impostorPositions = new Set();
-    } else if(subRoll < 0.66){
-      while(impostorPositions.size < 2){
-        impostorPositions.add(Math.floor(Math.random() * totalPlayers) + 1);
-      }
-    } else {
-      const impostorCount = Math.floor(Math.random() * (totalPlayers - 2)) + 3;
-      while(impostorPositions.size < impostorCount){
-        impostorPositions.add(Math.floor(Math.random() * totalPlayers) + 1);
-      }
-    }
-  }
-
-  buttonsDiv.innerHTML = "";
-  for(let i=1;i<=totalPlayers;i++){
-    const b=document.createElement("button");
-    b.textContent=i;
-    b.className="num-btn";
-    b.addEventListener("click",()=>revealNumber(i,b));
-    buttonsDiv.appendChild(b);
-  }
-
-  displayName.textContent="";
-  displayDesc.textContent="";
-  imgWrap.innerHTML="";
-  readyBtn.style.display="none";
-  playAgainBtn.style.display="none";
-  showImpostorsBtn.style.display="none";
-}
-
-function loadPlayerImage(name,onSuccess,onFail){
-  const tryExt=(ext)=>{ 
-    const img=new Image(); img.className="player-image";
-    img.onload=()=>onSuccess(img);
-    img.onerror=()=>{ if(ext==".jpg")tryExt(".png"); else onFail();};
-    img.src="Jugadores/"+name+ext;
-  };
-  tryExt(".jpg");
-}
-
-function showPlaceholder(text){
-  const d=document.createElement("div");
-  d.className="img-placeholder";
-  d.textContent=text;
-  return d;
-}
-
-function revealNumber(num,btn){
-  btn.disabled=true;
-  displayName.textContent="";
-  displayDesc.textContent="";
-  imgWrap.innerHTML="";
-
-  if(impostorPositions.has(num)){
-    displayName.textContent="IMPOSTOR";
-    displayDesc.textContent="Mantente en secreto... ¡Engaña a todos!";
-    loadPlayerImage("Impostor",(img)=>imgWrap.appendChild(img),()=>imgWrap.appendChild(showPlaceholder("Impostor no encontrado")));
-  }else{
-    const data=playersData[chosenPlayer];
-    displayName.textContent=chosenPlayer;
-    displayDesc.textContent=data.desc;
-    loadPlayerImage(data.img,(img)=>imgWrap.appendChild(img),()=>imgWrap.appendChild(showPlaceholder("Imagen no encontrada")));
-  }
-
-  readyBtn.style.display="inline-block";
-
-  readyBtn.onclick=()=>{
-    displayName.textContent="";
-    displayDesc.textContent="";
-    imgWrap.innerHTML="";
-    readyBtn.style.display="none";
-
-    const allDisabled=[...buttonsDiv.querySelectorAll("button")].every(b=>b.disabled);
-    if(allDisabled){
-      showImpostorsBtn.style.display="inline-block";
-      playAgainBtn.style.display="inline-block";
-    }
-  };
-}
-
-showImpostorsBtn.addEventListener("click",()=>{
-  displayName.textContent="Los impostores eran:";
-  displayDesc.textContent="";
-  imgWrap.innerHTML="";
-
-  impostorPositions.forEach(num=>{
-    const p=document.createElement("div");
-    p.textContent="Jugador "+num+" (Impostor)";
-    imgWrap.appendChild(p);
-  });
-
-  // 👉 Además mostramos al jugador elegido de la partida
-  const data=playersData[chosenPlayer];
-  const info=document.createElement("div");
-  info.style.marginTop="15px";
-  info.innerHTML="<strong>El jugador real era:</strong> "+chosenPlayer;
-  imgWrap.appendChild(info);
-
-  loadPlayerImage(data.img,(img)=>imgWrap.appendChild(img),()=>imgWrap.appendChild(showPlaceholder("Imagen no encontrada")));
-});
-
-playAgainBtn.addEventListener("click",()=>{ startNewGame(); });
-</script>
 </body>
 </html>
