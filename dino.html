@@ -989,32 +989,32 @@
       }, { passive: true });
 
       window.addEventListener('touchmove', (e) => {
+      window.addEventListener('touchmove', (e) => {
         if (!touchStartY) return;
         const touchCurrentY = e.touches[0].clientY;
         const diffY = touchCurrentY - touchStartY;
-        if (diffY > 30) {
-          duckStart();
-        } else if (diffY < -30) {
+
+        if (diffY < -30) { // swipe up
           jump();
+          touchStartY = null;
+        } else if (diffY > 30) { // swipe down
+          duckStart();
         }
       }, { passive: true });
 
       window.addEventListener('touchend', (e) => {
-        duckEnd();
         touchStartY = null;
+        duckEnd();
       });
 
-      // Mobile buttons events
-      btnJump.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        jump();
-      }, { passive: false });
+      // Mobile buttons
+      btnJump.addEventListener('touchstart', jump, { passive: true });
+      btnDuck.addEventListener('touchstart', duckStart, { passive: true });
+      btnDuck.addEventListener('touchend', duckEnd);
 
-      btnJump.addEventListener('mousedown', (e) => {
-        e.preventDefault();
-        jump();
-      });
-
+      // Start game loop
+      requestAnimationFrame(gameLoop);
+    })();
       btnDuck.addEventListener('touchstart', (e) => {
         e.preventDefault();
         duckStart();
