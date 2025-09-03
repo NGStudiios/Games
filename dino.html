@@ -19,6 +19,11 @@
       font-family: 'Arial', sans-serif;
       -webkit-tap-highlight-color: transparent;
       user-select: none;
+      transition: background-color 1s ease;
+    }
+
+    body.night {
+      background-color: #1a1a2e;
     }
 
     #gameContainer {
@@ -26,7 +31,7 @@
       width: 100vw;
       height: 100vh;
       overflow: hidden;
-      background-color: #f7f7f7;
+      background-color: transparent;
       display: flex;
       justify-content: center;
       align-items: flex-end;
@@ -35,11 +40,11 @@
 
     canvas {
       display: block;
-      background-color: #f7f7f7;
       max-width: 900px;
       width: 100%;
       height: 300px; /* Vertical size */
       image-rendering: pixelated;
+      background-color: transparent;
     }
 
     /* Text styles */
@@ -54,6 +59,11 @@
       user-select: none;
       display: none;
       text-align: center;
+      transition: color 1s ease;
+    }
+
+    body.night #gameOverText {
+      color: #ddd;
     }
 
     #restartHint {
@@ -66,6 +76,11 @@
       user-select: none;
       display: none;
       text-align: center;
+      transition: color 1s ease;
+    }
+
+    body.night #restartHint {
+      color: #bbb;
     }
 
     #score {
@@ -78,6 +93,11 @@
       user-select: none;
       font-family: 'Courier New', Courier, monospace;
       letter-spacing: 3px;
+      transition: color 1s ease;
+    }
+
+    body.night #score {
+      color: #ddd;
     }
 
     /* Mobile instructions */
@@ -91,6 +111,11 @@
       user-select: none;
       font-weight: 500;
       font-family: 'Arial', sans-serif;
+      transition: color 1s ease;
+    }
+
+    body.night #instructions {
+      color: #bbb;
     }
   </style>
 </head>
@@ -107,6 +132,7 @@
     (() => {
       const canvas = document.getElementById('gameCanvas');
       const ctx = canvas.getContext('2d');
+      const body = document.body;
 
       // Constants
       const CANVAS_WIDTH = canvas.width;
@@ -116,7 +142,7 @@
       const SCALE = 1.5;
       const DINO_WIDTH = 44 * SCALE; // 66
       const DINO_HEIGHT = 47 * SCALE; // 70.5
-      const DINO_DUCK_HEIGHT = 35 * SCALE; // improved duck height
+      const DINO_DUCK_HEIGHT = 45 * SCALE; // updated duck height to be taller so legs show
       const DINO_X = 50 * SCALE; // 75
       const GROUND_Y = CANVAS_HEIGHT - 60; // increased padding from bottom for taller canvas
 
@@ -125,10 +151,10 @@
       const JUMP_VELOCITY = -12 * SCALE;
 
       // Obstacle constants
-      const OBSTACLE_SPEED_START = 6 * SCALE;
-      const OBSTACLE_SPEED_INCREMENT = 0.0025 * SCALE;
+      const OBSTACLE_SPEED_START = 5 * SCALE; // start a bit slower for smoother acceleration
+      const OBSTACLE_SPEED_INCREMENT = 0.0008 * SCALE; // slower acceleration
       const OBSTACLE_MIN_GAP = 350; // minimum gap between obstacles
-      const OBSTACLE_MAX_GAP = 950; // maximum gap between obstacles (increased max for more variability)
+      const OBSTACLE_MAX_GAP = 900; // maximum gap between obstacles (slightly reduced max for more frequent obstacles)
 
       // Cloud constants
       const CLOUD_SPEED = 1.5 * SCALE;
@@ -176,6 +202,19 @@
 
       let lastTime = 0;
 
+      // To ensure pterodactyls appear regularly even if ground obstacles are frequent
+      let framesSinceLastPtero = 0;
+      const MIN_FRAMES_BETWEEN_PTERO = 60; // about 1 second at 60fps
+
+      // To control meteor spawn timing
+      let lastMeteorScore = 0;
+      const METEOR_SCORE_INTERVAL = 100; // meteor every 100 points after 800
+
+      // To control flying obstacle sequencing and interleaving with ground obstacles
+      let lastObstacleWasFlying = false;
+      let flyingObstacleCount = 0;
+      const MAX_FLYING_OBSTACLES_IN_ROW = 3;
+
       // DOM elements
       const scoreEl = document.getElementById('score');
       const gameOverText = document.getElementById('gameOverText');
@@ -187,7 +226,6 @@
       }
 
       // Dinosaur drawing (pixel art style, scaled)
-      // Improved duck animation with smooth frame cycling and body position adjustment
       function drawDino(ctx, dino) {
         ctx.save();
         ctx.translate(dino.x, dino.y);
@@ -226,7 +264,6 @@
           ctx.fillRect(-10, 20, 10, 10);
 
         } else if (dino.isDucking) {
-          // Ducking animation: cycle frames for smooth bobbing
           dino.duckFrameCount++;
           if (dino.duckFrameCount > 6) {
             dino.duckFrame++;
@@ -236,27 +273,32 @@
             }
           }
 
-          // Vertical offset for bobbing effect
           const bobOffset = [0, 2, 0, 1][dino.duckFrame];
 
           ctx.translate(0, bobOffset);
 
-          // Body lower and wider
-          ctx.fillRect(0, 35, 44, 20);
-          ctx.fillRect(30, 25, 14, 15);
+          ctx.fillRect(0, 25, 44, 30);
+          ctx.fillRect(30, 15, 14, 20);
 
           ctx.fillStyle = '#fff';
-          ctx.fillRect(38, 31, 6, 6);
+          ctx.fillRect(38, 21, 6, 6);
           ctx.fillStyle = '#000';
           if (dino.isBlinking) {
-            ctx.fillRect(38, 34, 6, 2);
+            ctx.fillRect(38, 24, 6, 2);
           } else {
-            ctx.fillRect(40, 33, 2, 2);
+            ctx.fillRect(40, 23, 2, 2);
           }
 
           ctx.fillStyle = '#535353';
-          // Tail tucked lower and slightly shifted for duck
-          ctx.fillRect(-10, 45, 10, 10);
+          ctx.fillRect(-10, 35, 10, 10);
+
+          if (dino.duckFrame % 2 === 0) {
+            ctx.fillRect(10, 55, 10, 7);
+            ctx.fillRect(30, 55, 10, 7);
+          } else {
+            ctx.fillRect(5, 53, 10, 7);
+            ctx.fillRect(35, 57, 10, 7);
+          }
 
         } else {
           if (dino.frame % 4 < 2) {
@@ -300,64 +342,34 @@
       }
 
       // Obstacle drawing (scaled)
+      // Pterodactyl with wing flap animation, flying low for ducking challenge
+      // Meteor drawing: diagonal falling from top-right to bottom-left
       function drawObstacle(ctx, obstacle) {
         ctx.save();
         ctx.translate(obstacle.x, obstacle.y);
         ctx.scale(SCALE, SCALE);
 
-        ctx.fillStyle = '#535353';
+        ctx.fillStyle = body.classList.contains('night') ? '#ddd' : '#535353';
 
         if (obstacle.type === 'smallCactus') {
           ctx.fillRect(0, 0, 15, 30);
-          ctx.fillRect(5, -10, 5, 10);
-          ctx.fillRect(10, -5, 5, 5);
+          ctx.fillRect(-5, 10, 5, 10);
+          ctx.fillRect(15, 5, 5, 15);
+          ctx.fillRect(3, -5, 4, 5);
+          ctx.fillRect(8, -8, 4, 5);
         } else if (obstacle.type === 'largeCactus') {
           ctx.fillRect(0, 0, 25, 50);
-          ctx.fillRect(5, -15, 5, 15);
-          ctx.fillRect(15, -10, 5, 10);
-          ctx.fillRect(20, -5, 5, 5);
+          ctx.fillRect(-7, 15, 7, 15);
+          ctx.fillRect(5, -10, 5, 15);
+          ctx.fillRect(25, 10, 7, 20);
+          ctx.fillRect(18, -5, 5, 15);
+          ctx.fillRect(8, -15, 6, 10);
+          ctx.fillRect(15, -20, 6, 10);
         } else if (obstacle.type === 'pterodactyl') {
-          // Flying right to left (normal)
-          ctx.fillRect(0, 10, 40, 10);
-          ctx.beginPath();
-          ctx.moveTo(0, 10);
-          ctx.lineTo(-10, 0);
-          ctx.lineTo(0, 20);
-          ctx.closePath();
-          ctx.fill();
-          ctx.beginPath();
-          ctx.moveTo(40, 10);
-          ctx.lineTo(50, 0);
-          ctx.lineTo(40, 20);
-          ctx.closePath();
-          ctx.fill();
-          ctx.fillRect(40, 5, 10, 10);
-        } else if (obstacle.type === 'rock') {
-          ctx.beginPath();
-          ctx.moveTo(0, 30);
-          ctx.lineTo(10, 10);
-          ctx.quadraticCurveTo(20, 0, 40, 20);
-          ctx.lineTo(50, 40);
-          ctx.lineTo(0, 40);
-          ctx.closePath();
-          ctx.fill();
-
-          ctx.strokeStyle = '#3a3a3a';
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.moveTo(10, 30);
-          ctx.lineTo(20, 20);
-          ctx.moveTo(30, 35);
-          ctx.lineTo(40, 25);
-          ctx.stroke();
-        } else if (obstacle.type === 'bird') {
-          // Bird flying right to left, resembling pterodactyl with wing flap animation
           const wingFlap = obstacle.frame % 20 < 10 ? 1 : -1;
 
-          // Body
           ctx.fillRect(0, 10, 40, 10);
 
-          // Wings flapping up/down
           ctx.beginPath();
           ctx.moveTo(0, 10);
           ctx.lineTo(-10, 10 - 10 * wingFlap);
@@ -372,8 +384,37 @@
           ctx.closePath();
           ctx.fill();
 
-          // Head
           ctx.fillRect(40, 5, 10, 10);
+        } else if (obstacle.type === 'rock') {
+          ctx.beginPath();
+          ctx.moveTo(0, 30);
+          ctx.lineTo(10, 10);
+          ctx.quadraticCurveTo(20, 0, 40, 20);
+          ctx.lineTo(50, 40);
+          ctx.lineTo(0, 40);
+          ctx.closePath();
+          ctx.fill();
+
+          ctx.strokeStyle = body.classList.contains('night') ? '#999' : '#3a3a3a';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(10, 30);
+          ctx.lineTo(20, 20);
+          ctx.moveTo(30, 35);
+          ctx.lineTo(40, 25);
+          ctx.stroke();
+        } else if (obstacle.type === 'meteor') {
+          ctx.fillStyle = '#ff6a00';
+          ctx.beginPath();
+          ctx.arc(10, 10, 10, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.strokeStyle = '#ffb347';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(0, 20);
+          ctx.lineTo(20, 0);
+          ctx.stroke();
         }
 
         ctx.restore();
@@ -384,7 +425,7 @@
         ctx.save();
         ctx.translate(cloud.x, cloud.y);
         ctx.scale(SCALE, SCALE);
-        ctx.fillStyle = '#cfcfcf';
+        ctx.fillStyle = body.classList.contains('night') ? '#666' : '#cfcfcf';
 
         ctx.beginPath();
         ctx.arc(0, 10, 10, 0, Math.PI * 2);
@@ -397,7 +438,7 @@
 
       // Draw ground line (scaled)
       function drawGround(ctx, x) {
-        ctx.strokeStyle = '#535353';
+        ctx.strokeStyle = body.classList.contains('night') ? '#ddd' : '#535353';
         ctx.lineWidth = 3 * SCALE;
         ctx.beginPath();
         ctx.moveTo(x, GROUND_Y + 1);
@@ -415,34 +456,55 @@
         );
       }
 
-      // Create new obstacle with variable spacing and bird flying right to left
-      function createObstacle() {
-        const types = ['smallCactus', 'largeCactus', 'pterodactyl', 'rock', 'bird'];
-        let type;
-
-        if (score > 500) {
-          const rand = Math.random();
-          if (rand < 0.2) {
-            type = 'pterodactyl';
-          } else if (rand < 0.35) {
-            type = 'bird';
-          } else if (rand < 0.55) {
-            type = 'rock';
-          } else if (rand < 0.8) {
-            type = 'smallCactus';
-          } else {
-            type = 'largeCactus';
+      // Check if there is any ground obstacle (non-pterodactyl, non-meteor) currently on screen or close to spawn
+      function isGroundObstacleNear() {
+        for (const obs of obstacles) {
+          if (obs.type !== 'pterodactyl' && obs.type !== 'meteor') {
+            if (obs.x + obs.width > 0 && obs.x < CANVAS_WIDTH + 300 * SCALE) {
+              return true;
+            }
           }
+        }
+        return false;
+      }
+
+      // Create new obstacle with variable spacing and pterodactyl or meteor flying/falling
+      function createObstacle() {
+        framesSinceLastPtero++;
+        // Meteor spawn controlled by score below
+
+        let type;
+        const groundObstacleNear = isGroundObstacleNear();
+
+        // Flying obstacles appear after 250 points, meteors after 800 points
+        const canSpawnFlying = score >= 250;
+        const canSpawnMeteor = score >= 800;
+
+        // Interleave flying and ground obstacles
+        if (canSpawnFlying && !lastObstacleWasFlying && flyingObstacleCount < MAX_FLYING_OBSTACLES_IN_ROW) {
+          // Spawn flying obstacle
+          type = 'pterodactyl';
+          lastObstacleWasFlying = true;
+          flyingObstacleCount++;
+          framesSinceLastPtero = 0;
         } else {
-          const rand = Math.random();
-          if (rand < 0.35) {
-            type = 'smallCactus';
-          } else if (rand < 0.6) {
-            type = 'largeCactus';
-          } else if (rand < 0.8) {
-            type = 'rock';
+          // Spawn ground obstacle or meteor if conditions met
+          lastObstacleWasFlying = false;
+          flyingObstacleCount = 0;
+
+          if (canSpawnMeteor && score - lastMeteorScore >= METEOR_SCORE_INTERVAL) {
+            type = 'meteor';
+            lastMeteorScore = score;
           } else {
-            type = 'bird';
+            // Ground obstacles: smallCactus, largeCactus, rock
+            const rand = Math.random();
+            if (rand < 0.45) {
+              type = 'smallCactus';
+            } else if (rand < 0.8) {
+              type = 'largeCactus';
+            } else {
+              type = 'rock';
+            }
           }
         }
 
@@ -460,26 +522,25 @@
           width = 25 * SCALE;
         } else if (type === 'pterodactyl') {
           height = 20 * SCALE;
-          const flyHeights = [GROUND_Y - 100 * SCALE, GROUND_Y - 75 * SCALE, GROUND_Y - 50 * SCALE];
+          const flyHeights = [GROUND_Y - 55 * SCALE, GROUND_Y - 65 * SCALE, GROUND_Y - 75 * SCALE];
           y = flyHeights[Math.floor(Math.random() * flyHeights.length)];
           width = 50 * SCALE;
         } else if (type === 'rock') {
           height = 40 * SCALE;
           y = GROUND_Y - height + 5 * SCALE;
           width = 50 * SCALE;
-        } else if (type === 'bird') {
+        } else if (type === 'meteor') {
           height = 20 * SCALE;
-          // Bird flies at a fixed height above dino, flying right to left from right side
-          y = GROUND_Y - 90 * SCALE;
-          width = 50 * SCALE;
+          width = 20 * SCALE;
+          y = -height; // start above canvas
         }
 
         let newX;
-        if (type === 'bird') {
-          // Bird flies right to left, start off right side beyond canvas
+        if (type === 'pterodactyl') {
           newX = CANVAS_WIDTH + randomBetween(100 * SCALE, 300 * SCALE);
+        } else if (type === 'meteor') {
+          newX = CANVAS_WIDTH + 50 * SCALE; // start near top-right corner
         } else {
-          // Normal obstacles spawn off right side with variable gap
           if (obstacles.length > 0) {
             const lastObs = obstacles[obstacles.length - 1];
             const gap = randomBetween(OBSTACLE_MIN_GAP, OBSTACLE_MAX_GAP);
@@ -499,7 +560,24 @@
           frameCount: 0,
           direction: 1,
           speed: obstacleSpeed,
+          vx: 0,
+          vy: 0,
         };
+
+        if (type === 'meteor') {
+          const targetX = dino.x + dino.width / 2;
+          const targetY = dino.y + dino.height;
+          const startX = newX;
+          const startY = y;
+
+          const dx = targetX - startX;
+          const dy = targetY - startY;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          const meteorSpeed = obstacleSpeed * 1.5;
+
+          obstacle.vx = (dx / dist) * meteorSpeed;
+          obstacle.vy = (dy / dist) * meteorSpeed;
+        }
 
         obstacles.push(obstacle);
       }
@@ -541,13 +619,39 @@
 
         gameState = STATE_PLAYING;
 
+        framesSinceLastPtero = MIN_FRAMES_BETWEEN_PTERO;
+        lastMeteorScore = 0;
+        lastObstacleWasFlying = false;
+        flyingObstacleCount = 0;
+
+        isNight = false;
+        body.classList.remove('night');
+
         gameOverText.style.display = 'none';
         restartHint.style.display = 'none';
+      }
+
+      // Day/Night cycle management based on score
+      let isNight = false;
+
+      function updateDayNightCycleByScore() {
+        const cycleIndex = Math.floor(score / 400);
+        const shouldBeNight = cycleIndex % 2 === 1;
+        if (shouldBeNight !== isNight) {
+          isNight = shouldBeNight;
+          if (isNight) {
+            body.classList.add('night');
+          } else {
+            body.classList.remove('night');
+          }
+        }
       }
 
       // Update function
       function update(deltaTime) {
         if (gameState !== STATE_PLAYING) return;
+
+        updateDayNightCycleByScore();
 
         // Update dino blink timer
         dino.blinkTimer += deltaTime;
@@ -582,7 +686,6 @@
             dino.jumpFrameCount = 0;
           }
         } else {
-          // Animate dino legs much faster when running
           dino.frameCount++;
           if (dino.frameCount > 2) {
             dino.frame++;
@@ -608,26 +711,30 @@
         // Move obstacles
         for (let i = obstacles.length - 1; i >= 0; i--) {
           const obs = obstacles[i];
-          if (obs.type === 'bird') {
-            // Bird flies right to left
-            obs.x -= obstacleSpeed * 1.2; // slightly faster than obstacles
+          if (obs.type === 'pterodactyl') {
+            obs.x -= obstacleSpeed * 1.2;
             if (obs.x + obs.width < 0) {
               obstacles.splice(i, 1);
+              continue;
             }
-          } else {
-            obs.x -= obstacleSpeed;
-            if (obs.x + obs.width < 0) {
-              obstacles.splice(i, 1);
-            }
-          }
-
-          // Animate pterodactyl and bird wings flapping
-          if (obs.type === 'pterodactyl' || obs.type === 'bird') {
             obs.frameCount++;
             if (obs.frameCount > 10) {
               obs.frame++;
               obs.frameCount = 0;
               obs.direction = obs.direction === 1 ? -1 : 1;
+            }
+          } else if (obs.type === 'meteor') {
+            obs.x += obs.vx;
+            obs.y += obs.vy;
+            if (obs.x + obs.width < 0 || obs.y > CANVAS_HEIGHT) {
+              obstacles.splice(i, 1);
+              continue;
+            }
+          } else {
+            obs.x -= obstacleSpeed;
+            if (obs.x + obs.width < 0) {
+              obstacles.splice(i, 1);
+              continue;
             }
           }
         }
@@ -652,13 +759,14 @@
         // Add new clouds
         if (
           clouds.length === 0 ||
-          (clouds[clouds.length - 1].x < CANVAS_WIDTH - randomBetween(CLOUD_MIN_GAP, CLOUD_MAX_GAP))
+          (clouds.length > 0 && clouds[clouds.length - 1].x < CANVAS_WIDTH - randomBetween(CLOUD_MIN_GAP, CLOUD_MAX_GAP))
         ) {
           createCloud();
         }
 
-        // Increase speed gradually
+        // Increase speed gradually but slowly
         obstacleSpeed += OBSTACLE_SPEED_INCREMENT;
+        if (obstacleSpeed > 15 * SCALE) obstacleSpeed = 15 * SCALE;
 
         // Update score
         score += 0.1;
@@ -683,8 +791,7 @@
             height: obs.height,
           };
 
-          // Special collision for bird: player must duck to avoid
-          if (obs.type === 'bird') {
+          if (obs.type === 'pterodactyl' || obs.type === 'meteor') {
             if (dino.isDucking) {
               const duckRect = {
                 x: dino.x,
@@ -696,7 +803,17 @@
                 gameOver();
                 break;
               }
-            } else {
+            } else if (obs.type === 'meteor' && dino.isJumping) {
+              if (isColliding(dinoRect, obsRect)) {
+                gameOver();
+                break;
+              }
+            } else if (obs.type === 'pterodactyl' && !dino.isDucking) {
+              if (isColliding(dinoRect, obsRect)) {
+                gameOver();
+                break;
+              }
+            } else if (obs.type === 'meteor' && !dino.isDucking && !dino.isJumping) {
               if (isColliding(dinoRect, obsRect)) {
                 gameOver();
                 break;
