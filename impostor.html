@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Juego del Impostor - Fútbol</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 50px;
+      background-color: #f0f0f0;
+    }
+    h1 {
+      color: #333;
+    }
+    .buttons {
+      margin: 20px 0;
+    }
+    button {
+      font-size: 18px;
+      padding: 10px 20px;
+      margin: 5px;
+      cursor: pointer;
+    }
+    #result {
+      margin-top: 30px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Juego del Impostor - Fútbol</h1>
+<p>Haz clic en un número para ver qué jugador le tocó y si es el impostor.</p>
+
+<div class="buttons">
+  <button onclick="showPlayer(1)">1</button>
+  <button onclick="showPlayer(2)">2</button>
+  <button onclick="showPlayer(3)">3</button>
+  <button onclick="showPlayer(4)">4</button>
+  <button onclick="showPlayer(5)">5</button>
+</div>
+
+<div id="result"></div>
+
+<script>
+  // Lista de jugadores posibles (300 nombres)
+  const players = [
+    "Neymar", "Mbappé", "Salah", "De Bruyne", "Kante", "Modric", "Rashford", "Sterling", "Foden", "Joao Felix",
+    "Verratti", "Insigne", "Son", "Sane", "Haaland", "Dembélé", "Griezmann", "Goretzka", "Sancho", "Gundogan",
+    "Alaba", "Varane", "Thiago Silva", "Ramos", "Kimmich", "Pogba", "Fabinho", "Rodri", "Casemiro", "Milinkovic-Savic",
+    "Lautaro Martinez", "Immobile", "Lewin", "Berardi", "Vlahovic", "Belotti", "Chiesa", "Zaniolo", "Bernardeschi", "Politano",
+    "Walker", "Alexander-Arnold", "Laporte", "Dias", "Mendy", "Cancelo", "Digne", "Hysaj", "Tagliafico", "Foyth",
+    "Coutinho", "Eriksen", "Havertz", "Nkunku", "Musiala", "Raphinha", "Vinicius Jr.", "Rodrygo", "Ederson", "Alisson",
+    "De Gea", "Oblak", "Ter Stegen", "Handanovic", "Courtois", "Schmeichel", "Lloris", "Pickford", "Trapp", "Navas",
+    "Barella", "Jorginho", "Locatelli", "Frattesi", "Tonali", "Zielinski", "Rabiot", "Fabián Ruiz", "Lo Celso", "Paredes",
+    "Richarlison", "Gabriel Jesus", "Firmino", "Aubameyang", "Mane", "Di Maria", "Pellegrini", "Vidal", "Arturo Vidal",
+    "Erik Lamela", "Dybala", "Cavani", "Suarez", "Otamendi", "Godin", "Chiellini", "Bonucci", "De Vrij", "Manolas",
+    "Skriniar", "Hernandez", "Tagliafico", "Spinazzola", "Kounde", "Upamecano", "Rudiger", "Marquinhos", "Silva",
+    "Alvarez", "Correa", "Araujo", "Fati", "Gavi", "Pedri", "Bellingham", "Grealish", "Mount", "Havertz",
+    "Pulisic", "Ziyech", "Hakimi", "Cancelo", "Telles", "Ricardo Pereira", "Reguilon", "Davies", "Alonso", "Shaw",
+    "Kabak", "Akanji", "Sule", "Jose Maria Gimenez", "Diogo Costa", "Gomes", "De Ligt", "Koulibaly", "Upamecano",
+    "Jonas Hofmann", "Wirtz", "Gnabry", "Sane", "Sancho", "Ferran Torres", "Oyarzabal", "Asensio", "Morata", "Joao Mario",
+    "Ceballos", "Pulisic", "Tielemans", "Carrasco", "Hazard", "Draxler", "Ronaldo Nazario", "Rivaldo", "Ronaldinho", "Kaka",
+    "Totti", "Del Piero", "Shevchenko", "Henry", "Schweinsteiger", "Lampard", "Terry", "Gerrard", "Carragher", "Figo",
+    "C.Ronaldo Jr.", "Higuain", "Tevez", "Kolarov", "Matic", "De Rossi", "Marchisio", "Benzema", "Varane", "Ramos",
+    "Pique", "Busquets", "Iniesta", "Xavi", "Casillas", "Buffon", "Beckham", "Rooney", "Scholes", "Giggs",
+    "Owen", "Vieri", "Del Piero", "Trezeguet", "Riquelme", "Aimar", "Mascherano", "Cambiaso", "Di Maria", "Lamela",
+    "Zlatan Ibrahimovic", "Ibrahimovic", "Kjaer", "Handanovic", "Chiellini", "Bonucci", "Alex Sandro", "Danilo",
+    "Fernandinho", "Fred", "Casemiro", "Arthur", "Paulinho", "Thiago Alcantara", "Rodri", "De Jong", "Frenkie de Jong",
+    "Kante", "Ngolo Kante", "Kroos", "Isco", "Hazard", "Bale", "Modric", "Valverde", "Ceballos", "Asensio",
+    "Gnabry", "Musiala", "Muller", "Sane", "Coman", "Davies", "Kimmich", "Goretzka", "Hernandez", "Alaba",
+    "Rashford", "Sancho", "Greenwood", "Martial", "Bruno Fernandes", "McTominay", "Fred", "Fredy", "Casemiro",
+    "Vinicius Jr.", "Rodrygo", "Benzema", "Hazard", "Carvajal", "Militao", "Nacho", "Courtois", "Oblak", "Ter Stegen",
+    "De Gea", "Ederson", "Alisson", "Mendy", "Walker", "Alexander-Arnold", "Laporte", "Dias", "Cancelo", "Hysaj",
+    "Tagliafico", "Foyth", "Chiesa", "Zaniolo", "Berardi", "Vlahovic", "Lautaro Martinez", "Immobile", "Belotti",
+    "Lukaku", "Dzeko", "Verratti", "Jorginho", "Barella", "Tonali", "Frattesi", "Locatelli", "Zielinski", "Paredes",
+    "Di Maria", "Coutinho", "Gabriel Jesus", "Firmino", "Aubameyang", "Salah", "Mane", "Neymar", "Mbappe",
+    "Dybala", "Cavani", "Suarez", "Fati", "Pedri", "Gavi", "Bellingham", "Grealish", "Mount", "Pulisic",
+    "Havertz", "Ziyech", "Ferran Torres", "Oyarzabal", "Asensio", "Morata", "Joao Felix", "Joao Mario", "Tielemans",
+    "Carrasco", "Hazard", "Draxler", "Ronaldo Nazario", "Ronaldinho", "Kaka", "Totti", "Del Piero", "Shevchenko",
+    "Henry", "Schweinsteiger", "Lampard", "Terry", "Gerrard", "Carragher", "Figo", "Beckham", "Rooney", "Scholes",
+    "Giggs", "Owen", "Vieri", "Riquelme", "Aimar", "Mascherano", "Cambiaso"
+  ];
+
+  // Elegir jugador aleatorio
+  const chosenPlayer = players[Math.floor(Math.random() * players.length)];
+
+  // Elegir posición del impostor (1-5)
+  const impostorPosition = Math.floor(Math.random() * 5) + 1;
+
+  function showPlayer(number) {
+    const resultDiv = document.getElementById("result");
+    if (number === impostorPosition) {
+      resultDiv.textContent = `Posición ${number}: ${chosenPlayer} (IMPOSTOR)`;
+    } else {
+      resultDiv.textContent = `Posición ${number}: ${chosenPlayer}`;
+    }
+  }
+</script>
+
+</body>
+</html>
