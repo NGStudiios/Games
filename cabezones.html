@@ -3,174 +3,157 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fútbol Touch & PC</title>
+<title>Juego de Fútbol</title>
 <style>
-body {
-  margin:0;
-  font-family:'Segoe UI',sans-serif;
-  background:#4CAF50; /* césped */
-  overflow:hidden;
-}
-canvas {
-  display:block;
-  margin:0 auto;
-  background:#4CAF50;
-  border:3px solid #00e5ff;
-}
-.scoreboard {
-  text-align:center;
-  color:#fff;
-  font-size:1.5em;
-  margin:5px 0;
-  text-shadow: 0 0 5px #000;
-}
+  html, body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    height: 100%;
+    background: #3cba54;
+    font-family: Arial, sans-serif;
+  }
+  #gameCanvas {
+    background: #3cba54;
+    display: block;
+    margin: auto;
+    position: relative;
+  }
+  #hud {
+    position: absolute;
+    width: 100%;
+    top: 0;
+    text-align: center;
+    color: white;
+    font-size: 24px;
+    z-index: 10;
+  }
 </style>
 </head>
 <body>
-<div class="scoreboard">
-  Puntos: <span id="score">0</span>
+
+<div id="hud">
+  <span id="score1">0</span> - <span id="score2">0</span> | Tiempo: <span id="timer">60</span>s
 </div>
-<canvas id="gameCanvas" width="800" height="400"></canvas>
+<canvas id="gameCanvas" width="400" height="700"></canvas>
+
 <script>
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-let score = 0;
-const scoreEl = document.getElementById('score');
+let score1 = 0;
+let score2 = 0;
+let timer = 60;
 
-// Jugador único
-const player = {x: canvas.width/2 - 30, y: canvas.height - 80, width:60, height:60, color:'#ff4444', speed:6};
+// Jugadores
+const player1 = {x: 150, y: 650, width: 80, height: 20, color: 'blue'};
+const player2 = {x: 150, y: 30, width: 80, height: 20, color: 'red'};
 
 // Pelota
-const ball = {x: canvas.width/2, y: canvas.height - 120, radius:15, vx:0, vy:0, color:'#fff', moving:false};
+const ball = {x: 200, y: 350, radius: 15, color: 'white', dx: 3, dy: 3};
 
-// Arco
-const goal = {x: canvas.width/2 - 50, y:50, width:100, height:20, color:'#fff'};
+// Detectar input
+let pointerX1 = null;
+let pointerX2 = null;
 
-// Controles
-const keys = {};
+canvas.addEventListener('mousemove', e => {
+  if(e.clientY > canvas.height/2) pointerX1 = e.offsetX;
+  else pointerX2 = e.offsetX;
+});
 
-// Función para dibujar jugador
-function drawPlayer(){
-  ctx.fillStyle = player.color;
-  ctx.fillRect(player.x, player.y, player.width, player.height);
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  for(let touch of e.touches){
+    if(touch.clientY > canvas.height/2) pointerX1 = touch.clientX - canvas.getBoundingClientRect().left;
+    else pointerX2 = touch.clientX - canvas.getBoundingClientRect().left;
+  }
+}, {passive:false});
+
+function update() {
+  // Mover jugadores
+  if(pointerX1 !== null) player1.x = pointerX1 - player1.width/2;
+  if(pointerX2 !== null) player2.x = pointerX2 - player2.width/2;
+
+  // Limitar jugadores dentro del canvas
+  player1.x = Math.max(0, Math.min(canvas.width - player1.width, player1.x));
+  player2.x = Math.max(0, Math.min(canvas.width - player2.width, player2.x));
+
+  // Mover pelota
+  ball.x += ball.dx;
+  ball.y += ball.dy;
+
+  // Rebotes con paredes
+  if(ball.x < ball.radius || ball.x > canvas.width - ball.radius) ball.dx *= -1;
+
+  // Rebotes con jugadores
+  if(ball.y + ball.radius > player1.y && ball.y - ball.radius < player1.y + player1.height &&
+     ball.x > player1.x && ball.x < player1.x + player1.width) {
+    ball.dy *= -1;
+    ball.y = player1.y - ball.radius;
+  }
+  if(ball.y - ball.radius < player2.y + player2.height && ball.y + ball.radius > player2.y &&
+     ball.x > player2.x && ball.x < player2.x + player2.width) {
+    ball.dy *= -1;
+    ball.y = player2.y + player2.height;
+  }
+
+  // Goles
+  if(ball.y < 0){
+    score1++;
+    resetBall();
+  } else if(ball.y > canvas.height){
+    score2++;
+    resetBall();
+  }
 }
 
-// Función para dibujar pelota
-function drawBall(){
-  ctx.fillStyle = ball.color;
+function resetBall() {
+  ball.x = canvas.width/2;
+  ball.y = canvas.height/2;
+  ball.dx = (Math.random() > 0.5 ? 3 : -3);
+  ball.dy = (Math.random() > 0.5 ? 3 : -3);
+  updateScore();
+}
+
+function updateScore(){
+  document.getElementById('score1').textContent = score1;
+  document.getElementById('score2').textContent = score2;
+}
+
+// Cronómetro
+setInterval(()=>{
+  timer--;
+  document.getElementById('timer').textContent = timer;
+  if(timer <= 0) alert(`¡Fin del juego! Resultado: ${score1} - ${score2}`);
+}, 1000);
+
+function draw() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  // Dibujar jugadores
+  ctx.fillStyle = player1.color;
+  ctx.fillRect(player1.x, player1.y, player1.width, player1.height);
+  ctx.fillStyle = player2.color;
+  ctx.fillRect(player2.x, player2.y, player2.width, player2.height);
+
+  // Dibujar pelota
   ctx.beginPath();
   ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI*2);
+  ctx.fillStyle = ball.color;
   ctx.fill();
+  ctx.closePath();
+
+  requestAnimationFrame(draw);
 }
 
-// Función para dibujar arco
-function drawGoal(){
-  ctx.fillStyle = goal.color;
-  ctx.fillRect(goal.x, goal.y, goal.width, goal.height);
+function gameLoop(){
+  update();
+  requestAnimationFrame(gameLoop);
 }
 
-// Movimiento jugador (PC)
-function movePlayer(){
-  if(keys['ArrowLeft'] && player.x>0) player.x -= player.speed;
-  if(keys['ArrowRight'] && player.x + player.width < canvas.width) player.x += player.speed;
-  if(keys['ArrowUp'] && player.y>canvas.height/2) player.y -= player.speed;
-  if(keys['ArrowDown'] && player.y + player.height < canvas.height - player.height) player.y += player.speed;
-}
-
-// Movimiento de la pelota
-function moveBall(){
-  if(ball.moving){
-    ball.x += ball.vx;
-    ball.y += ball.vy;
-
-    // Rebote con bordes
-    if(ball.x - ball.radius <0 || ball.x + ball.radius > canvas.width){
-      ball.vx = -ball.vx;
-    }
-    if(ball.y - ball.radius <0){
-      // Si entra al arco
-      if(ball.x > goal.x && ball.x < goal.x + goal.width){
-        score++;
-        scoreEl.innerText = score;
-      }
-      resetBall();
-    }
-    if(ball.y + ball.radius > canvas.height){
-      resetBall();
-    }
-  } else {
-    // La pelota sigue al jugador si no está en movimiento
-    ball.x = player.x + player.width/2;
-    ball.y = player.y - ball.radius - 5;
-  }
-}
-
-// Reset pelota
-function resetBall(){
-  ball.moving = false;
-  ball.vx = 0;
-  ball.vy = 0;
-  ball.x = player.x + player.width/2;
-  ball.y = player.y - ball.radius -5;
-}
-
-// Disparo de pelota
-function kickBall(){
-  if(!ball.moving){
-    ball.vx = (Math.random()*4 - 2); // dirección horizontal aleatoria
-    ball.vy = -7; // velocidad hacia arriba
-    ball.moving = true;
-  }
-}
-
-// Touch control
-let touchX = null;
-let touchY = null;
-
-canvas.addEventListener('touchstart', e=>{
-  const t = e.touches[0];
-  touchX = t.clientX - canvas.getBoundingClientRect().left;
-  touchY = t.clientY - canvas.getBoundingClientRect().top;
-
-  // Disparo si tocamos arriba
-  if(touchY < canvas.height/2){
-    kickBall();
-  }
-});
-
-canvas.addEventListener('touchmove', e=>{
-  const t = e.touches[0];
-  const moveX = t.clientX - canvas.getBoundingClientRect().left;
-  const moveY = t.clientY - canvas.getBoundingClientRect().top;
-
-  player.x = Math.min(Math.max(moveX - player.width/2,0), canvas.width - player.width);
-  player.y = Math.min(Math.max(moveY, canvas.height/2), canvas.height - player.height);
-});
-
-// Update
-function update(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle = '#4CAF50';
-  ctx.fillRect(0,0,canvas.width,canvas.height);
-
-  drawGoal();
-  drawPlayer();
-  drawBall();
-  movePlayer();
-  moveBall();
-
-  requestAnimationFrame(update);
-}
-
-// Controles teclado
-document.addEventListener('keydown', e => {
-  keys[e.key] = true;
-  if(e.key===' ') kickBall(); // espacio para disparar
-});
-document.addEventListener('keyup', e => keys[e.key] = false);
-
-update();
+draw();
+gameLoop();
 </script>
+
 </body>
 </html>
