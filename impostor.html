@@ -1,161 +1,226 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>El Impostor - Fútbol</title>
 <style>
-  body, html {
-    margin: 0;
-    padding: 0;
-    font-family: Arial, sans-serif;
-    background: #121212;
-    color: white;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+  :root{
+    --bg:#0f1724;
+    --panel:#0f172a;
+    --accent:#00e5ff;
+    --card:#141416;
+    --muted:#9aa4ad;
   }
-  h1 {
-    font-size: 2.5em;
-    color: #00e5ff;
-    margin-bottom: 20px;
-  }
-  .numbers {
-    display: flex;
-    gap: 15px;
-    margin-bottom: 30px;
-  }
-  button.number-btn {
-    font-size: 1.5em;
-    padding: 15px 25px;
-    border: none;
-    border-radius: 10px;
-    background: #1e1e1e;
-    color: white;
-    cursor: pointer;
-    transition: transform 0.2s, background 0.2s;
-  }
-  button.number-btn:hover {
-    transform: scale(1.1);
-    background: #252525;
-  }
-  #display {
-    font-size: 2em;
-    margin-bottom: 30px;
-    min-height: 50px;
-    transition: opacity 0.5s;
-  }
-  #playAgain {
-    font-size: 1.2em;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 10px;
-    background: #00e5ff;
-    color: #121212;
-    cursor: pointer;
-    display: none;
-  }
-  #playAgain:hover {
-    background: #00c8e0;
+  html,body{height:100%;margin:0;background:linear-gradient(180deg,#071126,#0f1724);font-family:Inter,system-ui,Arial,sans-serif;color:#fff}
+  .wrap{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;box-sizing:border-box}
+  h1{margin:0 0 18px;font-size:28px;color:var(--accent);text-shadow:0 4px 20px rgba(0,229,255,0.06)}
+  .board{background:var(--panel);border-radius:14px;padding:22px;box-shadow:0 10px 40px rgba(2,6,23,0.6);width:100%;max-width:920px}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+  .hint{color:var(--muted);font-size:13px}
+  .nums{display:flex;gap:12px;justify-content:center;margin:18px 0}
+  .num-btn{background:linear-gradient(180deg,#1b1c1f,#151618);border:1px solid rgba(255,255,255,0.04);padding:14px 18px;border-radius:10px;color:#fff;font-weight:700;font-size:18px;cursor:pointer;min-width:64px;transition:transform .12s,opacity .12s}
+  .num-btn:active{transform:translateY(2px)}
+  .num-btn[disabled]{opacity:.45;cursor:not-allowed;transform:none}
+  .display-area{display:flex;flex-direction:column;align-items:center;gap:12px;min-height:180px;padding:18px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.03)}
+  .player-name{font-size:22px;font-weight:700;color:#fff}
+  .small-note{font-size:13px;color:var(--muted)}
+  .player-image{width:160px;height:160px;border-radius:10px;object-fit:cover;border:4px solid rgba(255,255,255,0.04);box-shadow:0 8px 30px rgba(0,0,0,0.6);background:linear-gradient(180deg,#111,#0b1014);display:block}
+  .img-placeholder{width:160px;height:160px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:#2b2f33;color:var(--muted);font-size:13px;border:4px dashed rgba(255,255,255,0.03)}
+  .controls{display:flex;gap:12px;align-items:center;justify-content:center;margin-top:16px}
+  .btn{background:var(--accent);color:#06121a;padding:10px 16px;border-radius:10px;font-weight:700;border:none;cursor:pointer}
+  .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
+  @media(max-width:560px){
+    .display-area{min-height:220px}
+    .player-image,.img-placeholder{width:140px;height:140px}
+    .num-btn{padding:12px 14px;min-width:52px}
   }
 </style>
 </head>
 <body>
+  <div class="wrap">
+    <div class="board" role="application" aria-labelledby="title">
+      <div class="top">
+        <h1 id="title">El Impostor - Fútbol</h1>
+        <div class="hint">Las imágenes se cargan desde la carpeta <strong>Jugadores</strong></div>
+      </div>
 
-<h1>El Impostor - Fútbol</h1>
+      <div class="nums" id="buttons">
+        <button class="num-btn" data-number="1">1</button>
+        <button class="num-btn" data-number="2">2</button>
+        <button class="num-btn" data-number="3">3</button>
+        <button class="num-btn" data-number="4">4</button>
+        <button class="num-btn" data-number="5">5</button>
+      </div>
 
-<div class="numbers">
-  <button class="number-btn" data-number="1">1</button>
-  <button class="number-btn" data-number="2">2</button>
-  <button class="number-btn" data-number="3">3</button>
-  <button class="number-btn" data-number="4">4</button>
-  <button class="number-btn" data-number="5">5</button>
-</div>
+      <div class="display-area" id="displayArea" aria-live="polite">
+        <div class="player-name" id="displayText"></div>
+        <div id="imgWrap">
+          <!-- imagen o placeholder -->
+        </div>
+        <div class="small-note" id="statusNote">Toca un número (1–5) para revelar.</div>
+      </div>
 
-<div id="display"></div>
-<button id="playAgain">Jugar otro juego</button>
+      <div class="controls">
+        <button id="playAgain" class="btn" style="display:none">Jugar otro</button>
+        <button id="revealAll" class="btn secondary">Revelar impostor</button>
+      </div>
+    </div>
+  </div>
 
 <script>
-  // Lista de jugadores (300+ nombres)
-  const playersList = [
-    "Neymar","Mbappé","Salah","De Bruyne","Kante","Modric","Rashford","Sterling","Foden","Joao Felix",
-    "Verratti","Insigne","Son","Sane","Haaland","Dembélé","Griezmann","Goretzka","Sancho","Gundogan",
-    "Alaba","Varane","Thiago Silva","Ramos","Kimmich","Pogba","Fabinho","Rodri","Casemiro","Milinkovic-Savic",
-    "Lautaro Martinez","Immobile","Berardi","Vlahovic","Chiesa","Zaniolo","Bernardeschi","Politano","Walker",
-    "Alexander-Arnold","Laporte","Dias","Mendy","Cancelo","Digne","Hysaj","Tagliafico","Foyth","Coutinho",
-    "Eriksen","Havertz","Nkunku","Musiala","Raphinha","Vinicius Jr.","Rodrygo","Ederson","Alisson","De Gea",
-    "Oblak","Ter Stegen","Handanovic","Courtois","Schmeichel","Lloris","Pickford","Trapp","Navas","Barella",
-    "Jorginho","Locatelli","Frattesi","Tonali","Zielinski","Rabiot","Fabián Ruiz","Lo Celso","Paredes","Richarlison",
-    "Gabriel Jesus","Firmino","Aubameyang","Mane","Di Maria","Pellegrini","Vidal","Arturo Vidal","Erik Lamela",
-    "Dybala","Cavani","Suarez","Otamendi","Godin","Chiellini","Bonucci","De Vrij","Manolas","Skriniar","Hernandez",
-    "Spinazzola","Kounde","Upamecano","Rudiger","Marquinhos","Silva","Alvarez","Correa","Araujo","Fati","Gavi",
-    "Pedri","Bellingham","Grealish","Mount","Pulisic","Ziyech","Hakimi","Telles","Ricardo Pereira","Reguilon",
-    "Davies","Alonso","Shaw","Kabak","Akanji","Sule","Jose Maria Gimenez","Diogo Costa","De Ligt","Koulibaly",
-    "Jonas Hofmann","Wirtz","Ferran Torres","Oyarzabal","Asensio","Morata","Joao Mario","Ceballos","Tielemans",
-    "Carrasco","Hazard","Draxler","Ronaldo Nazario","Ronaldinho","Kaka","Totti","Del Piero","Shevchenko",
-    "Henry","Schweinsteiger","Lampard","Terry","Gerrard","Carragher","Figo","Beckham","Rooney","Scholes","Giggs",
-    "Owen","Vieri","Riquelme","Aimar","Mascherano","Cambiaso","Di Maria","Lamela","Zlatan Ibrahimovic","Kjaer",
-    "Fernandinho","Arthur","Paulinho","Thiago Alcantara","De Jong","Frenkie de Jong","Kroos","Isco","Valverde",
-    "Ceballos","Coman","Davies","Rashford","Greenwood","Martial","Bruno Fernandes","McTominay","Fred","Vinicius Jr.",
-    "Rodrygo","Benzema","Carvajal","Militao","Nacho","Oblak","Ter Stegen","De Gea","Ederson","Alisson","Mendy",
-    "Walker","Alexander-Arnold","Laporte","Dias","Cancelo","Hysaj","Chiesa","Zaniolo","Berardi","Vlahovic",
-    "Lautaro Martinez","Immobile","Belotti","Lukaku","Dzeko","Verratti","Jorginho","Barella","Tonali","Frattesi",
-    "Locatelli","Zielinski","Paredes","Di Maria","Coutinho","Gabriel Jesus","Firmino","Aubameyang","Salah",
-    "Mane","Dybala","Cavani","Suarez","Fati","Pedri","Gavi","Bellingham","Grealish","Mount","Pulisic","Havertz"
-  ];
+/* ===========================
+   Lista de jugadores (tal como pediste)
+   Usamos la lista que armamos (categorías: tus 18, leyendas y actuales)
+   Nombres exactamente como los pasaste (sin espacios).
+   Si más adelante querés reemplazarlos por 300 distintos, se puede.
+   =========================== */
+const players = [
+  /* Categoría 1 - tus 18 originales */
+  "Pelé","DiegoMaradona","LionelMessi","CristianoRonaldo","JohanCruyff","ZinedineZidane","Ronaldinho","MichelPlatini","GeorgeBest","FranzBeckenbauer","PaoloMaldini","RobertoBaggio","ThierryHenry","LuisSuárez","Neymar","KylianMbappé","AndrésIniesta","XaviHernández",
+  /* Categoría 2 - leyendas (sin repetir los anteriores) */
+  "LevYashin","AlfredoDiStefano","FerencPuskás","Eusebio","PaoloRossi","MarcoVanBasten","RuudGullit","RobertoCarlos","Cafú","FrancoBaresi","DinoZoff","BobbyCharlton","DenisLaw","GerdMüller","JohanNeeskens","RaymondKopa","KarlHeinzRummenigge","Sócrates","Zico","Romário","Rivaldo","Garrincha","Didi","Tostão","Clodoaldo","CarlosValderrama","RenéHiguita","DanielPassarella","OscarRuggeri","MarioKempes","EnzoFrancescoli","ArielOrtega","FernandoRedondo","IvánZamorano","MarceloSalas","HristoStoichkov","RobertoDonadoni","GianniRivera","AlessandroAltobelli","GiuseppeMeazza","OmarSivori","AntonioCabrini","GiancarloAntognoni","JoseManuelMoreno",
+  /* Categoría 3 - jugadores actuales / recientes (sin repetir) */
+  "IkerCasillas","GianluigiBuffon","ManuelNeuer","PhilippLahm","SergioRamos","GerardPiqué","CarlesPuyol","DaniAlves","MarceloVieira","ThiagoSilva","Marquinhos","DavidDeGea","AlissonBecker","EdersonMoraes","LukaModrić","ToniKroos","KevinDeBruyne","N’GoloKanté","PaulPogba","BrunoFernandes","JoshuaKimmich","LeonGoretzka","FrenkieDeJong","MatthijsDeLigt","VirgilVanDijk","ErlingHaaland","RobertLewandowski","KarimBenzema","HarryKane","RaheemSterling","SonHeung-min","JadonSancho","MarcusRashford","ViníciusJúnior","RodrygoGoes","Casemiro","EdinsonCavani","GabrielJesus","PhilippeCoutinho","BernardoSilva","JoãoFélix","AntoineGriezmann","OlivierGiroud","EdenHazard","ThomasMüller","LeroySané","KaiHavertz","TimoWerner","AntonioRüdiger","HarryMaguire","MasonMount","PhilFoden","JackGrealish","RodriHernández","EduardoCamavinga","JudeBellingham","Pedri","Gavi","AnsuFati","Raphinha","Richarlison","LautaroMartínez","PauloDybala","JamesRodríguez","RomeluLukaku"
+];
 
-  let usedPlayers = [];
-  let chosenPlayer = "";
-  let impostorPos = 0;
-  let clickedNumbers = [];
+/* =============
+   Juego
+   ============= */
+let chosenPlayer = "";        // nombre del jugador elegido (se repite en 1..5)
+let impostorPosition = 0;     // 1..5
+const displayText = document.getElementById("displayText");
+const imgWrap = document.getElementById("imgWrap");
+const statusNote = document.getElementById("statusNote");
+const buttons = Array.from(document.querySelectorAll(".num-btn"));
+const playAgainBtn = document.getElementById("playAgain");
+const revealAllBtn = document.getElementById("revealAll");
 
-  const display = document.getElementById("display");
-  const buttons = document.querySelectorAll(".number-btn");
-  const playAgain = document.getElementById("playAgain");
-
-  function setupGame() {
-    usedPlayers = [];
-    clickedNumbers = [];
-    chosenPlayer = playersList[Math.floor(Math.random() * playersList.length)];
-    impostorPos = Math.floor(Math.random() * 5) + 1;
-    display.textContent = "";
-    buttons.forEach(btn => btn.disabled = false);
-    playAgain.style.display = "none";
+function chooseRandomPlayer() {
+  // Elegir un jugador al azar de la lista (asegurar que exista al menos uno)
+  if (!players.length) {
+    chosenPlayer = "JugadorDesconocido";
+  } else {
+    chosenPlayer = players[Math.floor(Math.random()*players.length)];
   }
+  // Elegir posición impostor
+  impostorPosition = Math.floor(Math.random()*5) + 1;
+  // Reset UI
+  displayText.textContent = "";
+  imgWrap.innerHTML = "";
+  statusNote.textContent = "Toca un número (1–5) para revelar.";
+  buttons.forEach(b => { b.disabled = false; b.style.opacity = "1"; });
+  playAgainBtn.style.display = "none";
+}
 
-  function showPlayer(number, btn) {
-    if (clickedNumbers.includes(number)) return;
-    clickedNumbers.push(number);
-    btn.disabled = true;
+// Intentar cargar imagen .jpg, si falla probar .png
+function loadPlayerImage(baseName, onSuccess, onFail) {
+  // Intentamos .jpg primero
+  const tryExtension = (extIndex) => {
+    const ext = extIndex===0 ? ".jpg" : ".png";
+    const path = `Jugadores/${baseName}${ext}`;
+    const img = new Image();
+    img.className = "player-image";
+    img.alt = baseName;
+    img.onload = () => onSuccess(img);
+    img.onerror = () => {
+      if (extIndex===0) tryExtension(1);
+      else onFail();
+    };
+    img.src = path;
+  };
+  tryExtension(0);
+}
 
-    if (number === impostorPos) {
-      display.textContent = "IMPOSTOR";
-    } else {
-      display.textContent = chosenPlayer;
-      usedPlayers.push(chosenPlayer);
-    }
+function showPlaceholderNoImage(text) {
+  const placeholder = document.createElement("div");
+  placeholder.className = "img-placeholder";
+  placeholder.textContent = text;
+  return placeholder;
+}
 
-    setTimeout(() => {
-      display.textContent = number === impostorPos ? "IMPOSTOR" : "LISTO";
-      setTimeout(() => display.textContent = "", 1000);
-      if (clickedNumbers.length === 5) playAgain.style.display = "inline-block";
-    }, 1500);
-  }
+function revealNumber(number, btn) {
+  // Si ya fue clickeado, ignorar
+  if (btn.disabled) return;
+  btn.disabled = true;
+  btn.style.opacity = ".5";
 
-  buttons.forEach(btn => {
-    btn.addEventListener("click", () => {
-      showPlayer(parseInt(btn.getAttribute("data-number")), btn);
+  if (number === impostorPosition) {
+    // IMPOSTOR
+    displayText.textContent = "IMPOSTOR";
+    statusNote.textContent = `Posición ${number} es el IMPOSTOR`;
+    imgWrap.innerHTML = "";
+    loadPlayerImage("Impostor", img => {
+      imgWrap.appendChild(img);
+    }, () => {
+      imgWrap.appendChild(showPlaceholderNoImage("Impostor image\nno encontrada"));
     });
-  });
+  } else {
+    // Jugador normal - mostramos su nombre y su imagen desde Jugadores/<chosenPlayer>.jpg
+    displayText.textContent = chosenPlayer;
+    statusNote.textContent = `Posición ${number}: ${chosenPlayer}`;
+    imgWrap.innerHTML = "";
+    loadPlayerImage(chosenPlayer, img => {
+      imgWrap.appendChild(img);
+    }, () => {
+      // si no existe la imagen, mostrar placeholder
+      imgWrap.appendChild(showPlaceholderNoImage(`${chosenPlayer}\nimage not found`));
+    });
+  }
 
-  playAgain.addEventListener("click", () => {
-    setupGame();
-  });
+  // mostrar por 1.5s (imagen+texto), luego ajustar estado
+  setTimeout(()=> {
+    // Cambiar texto final de la casilla
+    if (number === impostorPosition) {
+      displayText.textContent = "IMPOSTOR";
+      statusNote.textContent = `IMPOSTOR revelado en ${number}`;
+    } else {
+      displayText.textContent = "LISTO";
+      statusNote.textContent = `Posición ${number} revelada`;
+    }
+    // limpiar imagen tras 1s más
+    setTimeout(()=> {
+      imgWrap.innerHTML = "";
+      // Si todos los botones están deshabilitados, mostrar botón de reinicio
+      const allDisabled = buttons.every(b => b.disabled);
+      if (allDisabled) playAgainBtn.style.display = "inline-block";
+    }, 900);
+  }, 1500);
+}
 
-  setupGame();
+// Revelar impostor (botón "Revelar impostor") - útil si querés mostrar sin jugar
+function revealImpostorNow() {
+  // deshabilitar todos botones y mostrar impostor pos
+  buttons.forEach(b=>{
+    b.disabled = true;
+    b.style.opacity = ".5";
+  });
+  // Mostrar en pantalla
+  displayText.textContent = "IMPOSTOR";
+  statusNote.textContent = `El impostor estaba en la posición ${impostorPosition}`;
+  imgWrap.innerHTML = "";
+  loadPlayerImage("Impostor", img=>imgWrap.appendChild(img), ()=>{
+    imgWrap.appendChild(showPlaceholderNoImage("Impostor image\nno encontrada"));
+  });
+  playAgainBtn.style.display = "inline-block";
+}
+
+buttons.forEach(btn=>{
+  btn.addEventListener("click", ()=> {
+    const num = parseInt(btn.getAttribute("data-number"),10);
+    revealNumber(num, btn);
+  });
+});
+
+revealAllBtn.addEventListener("click", revealImpostorNow);
+
+playAgainBtn.addEventListener("click", ()=>{
+  chooseRandomPlayer();
+});
+
+// Inicializar juego
+chooseRandomPlayer();
+
 </script>
-
 </body>
 </html>
