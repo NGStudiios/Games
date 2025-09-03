@@ -1,845 +1,172 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Tetris Game</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
-  />
-  <style>
-    /* Grid container for the Tetris board */
-    #tetris {
-      display: grid;
-      grid-template-columns: repeat(10, 2rem);
-      grid-template-rows: repeat(20, 2rem);
-      gap: 1.5px;
-      background-color: #1e293b; /* Tailwind slate-800 */
-      border: 3px solid #334155; /* Tailwind slate-700 */
-      border-radius: 0.5rem;
-      width: max-content;
-      margin: 0 auto;
-      user-select: none;
-    }
-    /* Each cell */
-    .cell {
-      width: 2rem;
-      height: 2rem;
-      background-color: #0f172a; /* Tailwind slate-900 */
-      border-radius: 0.25rem;
-      box-sizing: border-box;
-      transition: background-color 0.2s ease;
-    }
-    /* Colored blocks */
-    .I {
-      background-color: #06b6d4; /* cyan */
-      box-shadow: 0 0 6px #06b6d4;
-    }
-    .J {
-      background-color: #2563eb; /* blue */
-      box-shadow: 0 0 6px #2563eb;
-    }
-    .L {
-      background-color: #f97316; /* orange */
-      box-shadow: 0 0 6px #f97316;
-    }
-    .O {
-      background-color: #eab308; /* yellow */
-      box-shadow: 0 0 6px #eab308;
-    }
-    .S {
-      background-color: #22c55e; /* green */
-      box-shadow: 0 0 6px #22c55e;
-    }
-    .T {
-      background-color: #a855f7; /* purple */
-      box-shadow: 0 0 6px #a855f7;
-    }
-    .Z {
-      background-color: #ef4444; /* red */
-      box-shadow: 0 0 6px #ef4444;
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tetris Game</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+<style>
+  /* Tetris board */
+  #tetris {
+    display: grid;
+    grid-template-columns: repeat(10, 2rem);
+    grid-template-rows: repeat(20, 2rem);
+    gap: 1.5px;
+    background-color: #1e293b;
+    border: 3px solid #334155;
+    border-radius: 0.5rem;
+    width: max-content;
+    margin: 0 auto;
+    user-select: none;
+  }
+  .cell {
+    width: 2rem;
+    height: 2rem;
+    background-color: #0f172a;
+    border-radius: 0.25rem;
+    box-sizing: border-box;
+    transition: background-color 0.2s ease;
+  }
 
-    /* Next piece preview */
-    #next-piece {
-      width: 32rem;
-      height: 32rem;
-    }
+  /* Tetromino colors */
+  .I { background-color: #06b6d4; box-shadow: 0 0 6px #06b6d4; }
+  .J { background-color: #2563eb; box-shadow: 0 0 6px #2563eb; }
+  .L { background-color: #f97316; box-shadow: 0 0 6px #f97316; }
+  .O { background-color: #eab308; box-shadow: 0 0 6px #eab308; }
+  .S { background-color: #22c55e; box-shadow: 0 0 6px #22c55e; }
+  .T { background-color: #a855f7; box-shadow: 0 0 6px #a855f7; }
+  .Z { background-color: #ef4444; box-shadow: 0 0 6px #ef4444; }
 
-    /* Overlay for game over */
-    #game-over-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(15, 23, 42, 0.95);
-      color: #f87171; /* red-400 */
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      font-weight: 700;
-      font-size: 2.5rem;
-      z-index: 1000;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s ease;
-      user-select: none;
-    }
-    #game-over-overlay.show {
-      opacity: 1;
-      pointer-events: all;
-    }
-    #game-over-overlay button {
-      margin-top: 1.5rem;
-      background-color: #ef4444;
-      color: white;
-      padding: 0.75rem 2rem;
-      border-radius: 0.5rem;
-      font-size: 1.25rem;
-      font-weight: 700;
-      cursor: pointer;
-      border: none;
-      transition: background-color 0.2s ease;
-    }
-    #game-over-overlay button:hover {
-      background-color: #dc2626;
-    }
+  /* Next piece */
+  #next-piece, #next-piece-mobile {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    background: #0f172a;
+    border-radius: 0.5rem;
+    box-shadow: inset 0 0 6px #a855f7;
+    padding: 4px;
+    gap: 2px;
+  }
+  #next-piece-mobile {
+    width: 5rem;
+    height: 5rem;
+    padding: 2px;
+    gap: 1px;
+  }
+  #next-piece .cell, #next-piece-mobile .cell {
+    width: 100%;
+    height: 100%;
+    border-radius: 0.25rem;
+  }
 
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-      #tetris {
-        grid-template-columns: repeat(10, 1.6rem);
-        grid-template-rows: repeat(20, 1.6rem);
-        gap: 1px;
-        border-width: 2px;
-      }
-      .cell {
-        width: 1.6rem;
-        height: 1.6rem;
-        border-radius: 0.2rem;
-      }
-      #next-piece {
-        width: 24rem;
-        height: 24rem;
-      }
-      main {
-        gap: 4;
-      }
-    }
-    @media (max-width: 480px) {
-      #tetris {
-        grid-template-columns: repeat(10, 1.2rem);
-        grid-template-rows: repeat(20, 1.2rem);
-        gap: 0.8px;
-        border-width: 2px;
-      }
-      .cell {
-        width: 1.2rem;
-        height: 1.2rem;
-        border-radius: 0.15rem;
-      }
-      #next-piece {
-        width: 18rem;
-        height: 18rem;
-      }
-      main {
-        flex-direction: column;
-        align-items: center;
-        gap: 6;
-      }
-      section.w-full.max-w-xs.text-center.md\:text-left {
-        max-width: 100%;
-        width: 100%;
-        padding: 0 1rem;
-      }
-      #mobile-controls {
-        padding: 0.5rem 1rem;
-        gap: 2.5;
-      }
-      #mobile-controls button {
-        padding: 0.75rem;
-        font-size: 1.25rem;
-      }
-      #start-button {
-        font-size: 1.125rem;
-        padding: 0.75rem 0;
-      }
+  /* Game Over Overlay */
+  #game-over-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.95);
+    color: #f87171;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-weight: 700;
+    font-size: 2.5rem;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    user-select: none;
+  }
+  #game-over-overlay.show { opacity: 1; pointer-events: all; }
+  #game-over-overlay button {
+    margin-top: 1.5rem;
+    background-color: #ef4444;
+    color: white;
+    padding: 0.75rem 2rem;
+    border-radius: 0.5rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.2s ease;
+  }
+  #game-over-overlay button:hover { background-color: #dc2626; }
 
-      /* Smaller score, level, next piece on mobile in a horizontal row on top right */
-      #info-mobile {
-        position: fixed;
-        top: 0.5rem;
-        right: 0.5rem;
-        display: flex;
-        gap: 0.75rem;
-        background: #1e293b;
-        padding: 0.25rem 0.5rem;
-        border-radius: 0.5rem;
-        z-index: 60;
-        user-select: none;
-      }
-      #info-mobile > div {
-        background: #334155;
-        padding: 0.25rem 0.5rem;
-        border-radius: 0.375rem;
-        text-align: center;
-        min-width: 3.5rem;
-      }
-      #info-mobile h2 {
-        font-size: 0.75rem;
-        margin-bottom: 0.1rem;
-        font-weight: 600;
-        color: #94a3b8;
-      }
-      #info-mobile p {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: #f1f5f9;
-        line-height: 1;
-      }
-      #next-piece-mobile {
-        width: 4.5rem;
-        height: 4.5rem;
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        grid-template-rows: repeat(4, 1fr);
-        gap: 1px;
-        background: #0f172a;
-        border-radius: 0.375rem;
-        box-shadow: 0 0 6px #a855f7;
-      }
-      #next-piece-mobile .cell {
-        width: 1rem;
-        height: 1rem;
-        border-radius: 0.15rem;
-      }
-    }
-  </style>
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    #tetris { grid-template-columns: repeat(10, 1.6rem); grid-template-rows: repeat(20, 1.6rem); gap: 1px; border-width: 2px; }
+    .cell { width: 1.6rem; height: 1.6rem; border-radius: 0.2rem; }
+    main { gap: 4; }
+  }
+  @media (max-width: 480px) {
+    #tetris { grid-template-columns: repeat(10, 1.2rem); grid-template-rows: repeat(20, 1.2rem); gap: 0.8px; border-width: 2px; }
+    .cell { width: 1.2rem; height: 1.2rem; border-radius: 0.15rem; }
+    main { flex-direction: column; align-items: center; gap: 6; }
+  }
+</style>
 </head>
 <body class="bg-slate-900 text-slate-100 flex flex-col min-h-screen">
-  <header class="p-4 sm:p-6 text-center">
-    <h1 class="text-3xl sm:text-4xl font-extrabold tracking-wide">Tetris Game</h1>
-  </header>
 
-  <main class="flex flex-col md:flex-row justify-center items-start gap-8 px-4 pb-12 flex-grow">
-    <section>
-      <div id="tetris" aria-label="Tetris game board" role="grid" tabindex="0"></div>
-    </section>
+<header class="p-4 sm:p-6 text-center">
+  <h1 class="text-3xl sm:text-4xl font-extrabold tracking-wide">Tetris Game</h1>
+</header>
 
-    <section class="w-full max-w-xs text-center md:text-left hidden md:block">
-      <div class="mb-6 p-3 sm:p-4 bg-slate-800 rounded-lg shadow-lg">
-        <h2 class="text-xl sm:text-2xl font-semibold mb-1 sm:mb-2">Score</h2>
-        <p id="score" class="text-3xl sm:text-4xl font-bold">0</p>
-      </div>
-      <div class="mb-6 p-3 sm:p-4 bg-slate-800 rounded-lg shadow-lg">
-        <h2 class="text-xl sm:text-2xl font-semibold mb-1 sm:mb-2">Level</h2>
-        <p id="level" class="text-2xl sm:text-3xl font-bold">1</p>
-      </div>
-      <div class="mb-6 p-3 sm:p-4 bg-slate-800 rounded-lg rounded-b-none rounded-t-lg shadow-lg">
-        <h2 class="text-xl sm:text-2xl font-semibold mb-1 sm:mb-2">Next Piece</h2>
-        <div
-          id="next-piece"
-          class="grid grid-cols-4 grid-rows-4 gap-1 mx-auto bg-slate-900 rounded-lg"
-          aria-label="Next Tetris piece preview"
-        ></div>
-      </div>
-      <button
-        id="start-button"
-        class="w-full py-2 sm:py-3 mt-4 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 rounded-lg font-semibold text-lg sm:text-xl transition-colors"
-        aria-label="Start or Restart Tetris game"
-      >
-        Start / Restart
-      </button>
-      <p class="mt-4 text-xs sm:text-sm text-slate-400">
-        Use arrow keys to move and rotate pieces. Press spacebar to hard drop.
-      </p>
-    </section>
-  </main>
+<main class="flex flex-col md:flex-row justify-center items-start gap-8 px-4 pb-12 flex-grow">
 
-  <!-- Mobile info: score, level, next piece -->
-  <div id="info-mobile" class="md:hidden" aria-label="Game info for mobile">
-    <div>
-      <h2>Score</h2>
-      <p id="score-mobile">0</p>
+  <section>
+    <div id="tetris" aria-label="Tetris game board" role="grid" tabindex="0"></div>
+  </section>
+
+  <section class="w-full max-w-xs text-center md:text-left">
+    <div class="mb-6 p-3 sm:p-4 bg-slate-800 rounded-lg shadow-lg">
+      <h2 class="text-xl sm:text-2xl font-semibold mb-1 sm:mb-2">Score</h2>
+      <p id="score" class="text-3xl sm:text-4xl font-bold">0</p>
     </div>
-    <div>
-      <h2>Level</h2>
-      <p id="level-mobile">1</p>
+    <div class="mb-6 p-3 sm:p-4 bg-slate-800 rounded-lg shadow-lg">
+      <h2 class="text-xl sm:text-2xl font-semibold mb-1 sm:mb-2">Level</h2>
+      <p id="level" class="text-2xl sm:text-3xl font-bold">1</p>
     </div>
-    <div aria-label="Next piece preview mobile">
-      <div id="next-piece-mobile" class="rounded-lg"></div>
+    <div class="mb-6 p-3 sm:p-4 bg-slate-800 rounded-lg shadow-lg">
+      <h2 class="text-xl sm:text-2xl font-semibold mb-1 sm:mb-2">Next Piece</h2>
+      <div id="next-piece" aria-label="Next Tetris piece preview"></div>
+    </div>
+
+    <!-- Start / Restart button -->
+    <button id="start-button" class="w-full py-3 mt-4 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 rounded-lg font-semibold text-lg sm:text-xl transition-colors shadow-lg">
+      Start / Restart
+    </button>
+    <p class="mt-4 text-xs sm:text-sm text-slate-400">
+      Use arrow keys to move and rotate pieces. Press spacebar to hard drop.
+    </p>
+  </section>
+
+</main>
+
+<!-- Mobile info -->
+<div id="info-mobile" class="md:hidden fixed bottom-20 left-0 right-0 flex flex-col items-center gap-3 px-4">
+  <button id="start-button-mobile" class="w-full max-w-xs py-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 rounded-lg font-semibold text-lg shadow-lg">
+    Start / Restart
+  </button>
+  <div class="flex gap-2">
+    <div class="bg-slate-800 p-2 rounded-lg text-center w-20">
+      <h2 class="text-xs font-semibold text-slate-400">Score</h2>
+      <p id="score-mobile" class="text-lg font-bold text-white">0</p>
+    </div>
+    <div class="bg-slate-800 p-2 rounded-lg text-center w-20">
+      <h2 class="text-xs font-semibold text-slate-400">Level</h2>
+      <p id="level-mobile" class="text-lg font-bold text-white">1</p>
+    </div>
+    <div class="bg-slate-900 p-1 rounded-lg shadow-inner">
+      <div id="next-piece-mobile"></div>
     </div>
   </div>
+</div>
 
-  <!-- Mobile controls -->
-  <nav
-    id="mobile-controls"
-    class="fixed bottom-0 left-0 right-0 bg-slate-800 p-3 flex justify-center gap-4 md:hidden z-50"
-    aria-label="Mobile game controls"
-  >
-    <button
-      id="btn-left"
-      class="bg-slate-700 hover:bg-slate-600 active:bg-slate-500 rounded-lg p-3 flex items-center justify-center text-xl"
-      aria-label="Move left"
-      type="button"
-    >
-      <i class="fas fa-arrow-left"></i>
-    </button>
-    <button
-      id="btn-rotate"
-      class="bg-slate-700 hover:bg-slate-600 active:bg-slate-500 rounded-lg p-3 flex items-center justify-center text-xl"
-      aria-label="Rotate piece"
-      type="button"
-    >
-      <i class="fas fa-sync-alt"></i>
-    </button>
-    <button
-      id="btn-down"
-      class="bg-slate-700 hover:bg-slate-600 active:bg-slate-500 rounded-lg p-3 flex items-center justify-center text-xl"
-      aria-label="Move down"
-      type="button"
-    >
-      <i class="fas fa-arrow-down"></i>
-    </button>
-    <button
-      id="btn-right"
-      class="bg-slate-700 hover:bg-slate-600 active:bg-slate-500 rounded-lg p-3 flex items-center justify-center text-xl"
-      aria-label="Move right"
-      type="button"
-    >
-      <i class="fas fa-arrow-right"></i>
-    </button>
-    <button
-      id="btn-drop"
-      class="bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 rounded-lg p-3 flex items-center justify-center text-xl"
-      aria-label="Hard drop piece"
-      type="button"
-    >
-      <i class="fas fa-arrow-down"></i><i class="fas fa-arrow-down ml-1"></i>
-    </button>
-  </nav>
-
-  <!-- Game Over Overlay -->
-  <div id="game-over-overlay" role="alert" aria-live="assertive" aria-modal="true" hidden>
-    <div>¡Has perdido!</div>
-    <button id="game-over-restart" aria-label="Reiniciar juego">Reiniciar</button>
-  </div>
-
-  <footer class="text-center p-4 text-slate-500 text-sm">
-    &copy; 2024 Tetris by Tailwind Expert
-  </footer>
-
-  <script>
-    // Tetris game implementation
-
-    // Board dimensions
-    const COLS = 10;
-    const ROWS = 20;
-
-    // Tetromino shapes and rotations
-    const TETROMINOS = {
-      I: [
-        [[1, 1, 1, 1]],
-        [[1], [1], [1], [1]],
-      ],
-      J: [
-        [
-          [1, 0, 0],
-          [1, 1, 1],
-        ],
-        [
-          [1, 1],
-          [1, 0],
-          [1, 0],
-        ],
-        [
-          [1, 1, 1],
-          [0, 0, 1],
-        ],
-        [
-          [0, 1],
-          [0, 1],
-          [1, 1],
-        ],
-      ],
-      L: [
-        [
-          [0, 0, 1],
-          [1, 1, 1],
-        ],
-        [
-          [1, 0],
-          [1, 0],
-          [1, 1],
-        ],
-        [
-          [1, 1, 1],
-          [1, 0, 0],
-        ],
-        [
-          [1, 1],
-          [0, 1],
-          [0, 1],
-        ],
-      ],
-      O: [
-        [
-          [1, 1],
-          [1, 1],
-        ],
-      ],
-      S: [
-        [
-          [0, 1, 1],
-          [1, 1, 0],
-        ],
-        [
-          [1, 0],
-          [1, 1],
-          [0, 1],
-        ],
-      ],
-      T: [
-        [
-          [0, 1, 0],
-          [1, 1, 1],
-        ],
-        [
-          [1, 0],
-          [1, 1],
-          [1, 0],
-        ],
-        [
-          [1, 1, 1],
-          [0, 1, 0],
-        ],
-        [
-          [0, 1],
-          [1, 1],
-          [0, 1],
-        ],
-      ],
-      Z: [
-        [
-          [1, 1, 0],
-          [0, 1, 1],
-        ],
-        [
-          [0, 1],
-          [1, 1],
-          [1, 0],
-        ],
-      ],
-    };
-
-    // Colors for each tetromino type
-    const COLORS = {
-      I: "I",
-      J: "J",
-      L: "L",
-      O: "O",
-      S: "S",
-      T: "T",
-      Z: "Z",
-    };
-
-    // Game variables
-    let board = [];
-    let currentPiece = null;
-    let currentX = 0;
-    let currentY = 0;
-    let currentRotation = 0;
-    let score = 0;
-    let level = 1;
-    let linesCleared = 0;
-    let dropInterval = 1000;
-    let dropTimer = null;
-    let isGameOver = false;
-    let nextPiece = null;
-
-    // For soft drop animation control
-    let softDropActive = false;
-    let softDropTimer = null;
-
-    // DOM elements
-    const tetrisEl = document.getElementById("tetris");
-    const scoreEl = document.getElementById("score");
-    const levelEl = document.getElementById("level");
-    const nextPieceEl = document.getElementById("next-piece");
-    const startButton = document.getElementById("start-button");
-
-    // Mobile info elements
-    const scoreMobileEl = document.getElementById("score-mobile");
-    const levelMobileEl = document.getElementById("level-mobile");
-    const nextPieceMobileEl = document.getElementById("next-piece-mobile");
-
-    // Game over overlay
-    const gameOverOverlay = document.getElementById("game-over-overlay");
-    const gameOverRestartBtn = document.getElementById("game-over-restart");
-
-    // Initialize the board with empty cells
-    function initBoard() {
-      board = [];
-      tetrisEl.innerHTML = "";
-      for (let r = 0; r < ROWS; r++) {
-        board[r] = [];
-        for (let c = 0; c < COLS; c++) {
-          board[r][c] = "";
-          const cell = document.createElement("div");
-          cell.classList.add("cell");
-          cell.setAttribute("role", "gridcell");
-          cell.setAttribute("aria-rowindex", r + 1);
-          cell.setAttribute("aria-colindex", c + 1);
-          tetrisEl.appendChild(cell);
-        }
-      }
-    }
-
-    // Draw the board and current piece
-    function draw() {
-      // Clear all cells first
-      for (let r = 0; r < ROWS; r++) {
-        for (let c = 0; c < COLS; c++) {
-          const cellIndex = r * COLS + c;
-          const cell = tetrisEl.children[cellIndex];
-          cell.className = "cell";
-          if (board[r][c]) {
-            cell.classList.add(board[r][c]);
-          }
-        }
-      }
-
-      // Draw current piece
-      if (currentPiece) {
-        const shape = getCurrentShape();
-        for (let r = 0; r < shape.length; r++) {
-          for (let c = 0; c < shape[r].length; c++) {
-            if (shape[r][c]) {
-              const x = currentX + c;
-              const y = currentY + r;
-              if (y >= 0 && y < ROWS && x >= 0 && x < COLS) {
-                const cellIndex = y * COLS + x;
-                const cell = tetrisEl.children[cellIndex];
-                cell.classList.add(COLORS[currentPiece]);
-              }
-            }
-          }
-        }
-      }
-    }
-
-    // Get current shape matrix
-    function getCurrentShape() {
-      return TETROMINOS[currentPiece][currentRotation];
-    }
-
-    // Check if position is valid
-    function isValidPosition(x, y, rotation) {
-      const shape = TETROMINOS[currentPiece][rotation];
-      for (let r = 0; r < shape.length; r++) {
-        for (let c = 0; c < shape[r].length; c++) {
-          if (shape[r][c]) {
-            const newX = x + c;
-            const newY = y + r;
-            if (
-              newX < 0 ||
-              newX >= COLS ||
-              newY >= ROWS ||
-              (newY >= 0 && board[newY][newX])
-            ) {
-              return false;
-            }
-          }
-        }
-      }
-      return true;
-    }
-
-    // Place piece on board permanently
-    function placePiece() {
-      const shape = getCurrentShape();
-      for (let r = 0; r < shape.length; r++) {
-        for (let c = 0; c < shape[r].length; c++) {
-          if (shape[r][c]) {
-            const x = currentX + c;
-            const y = currentY + r;
-            if (y >= 0 && y < ROWS && x >= 0 && x < COLS) {
-              board[y][x] = COLORS[currentPiece];
-            }
-          }
-        }
-      }
-    }
-
-    // Clear full lines and update score
-    function clearLines() {
-      let lines = 0;
-      for (let r = ROWS - 1; r >= 0; r--) {
-        if (board[r].every((cell) => cell !== "")) {
-          board.splice(r, 1);
-          board.unshift(new Array(COLS).fill(""));
-          lines++;
-          r++; // recheck same row after shifting
-        }
-      }
-      if (lines > 0) {
-        linesCleared += lines;
-        score += calculateScore(lines);
-        level = Math.floor(linesCleared / 10) + 1;
-        dropInterval = Math.max(100, 1000 - (level - 1) * 100);
-        updateScoreLevel();
-        resetDropTimer();
-      }
-    }
-
-    // Calculate score based on lines cleared at once
-    function calculateScore(lines) {
-      switch (lines) {
-        case 1:
-          return 40 * level;
-        case 2:
-          return 100 * level;
-        case 3:
-          return 300 * level;
-        case 4:
-          return 1200 * level;
-        default:
-          return 0;
-      }
-    }
-
-    // Spawn a new piece
-    function spawnPiece() {
-      if (!nextPiece) {
-        nextPiece = randomPiece();
-      }
-      currentPiece = nextPiece;
-      nextPiece = randomPiece();
-      currentRotation = 0;
-      currentX = Math.floor(COLS / 2) - Math.ceil(TETROMINOS[currentPiece][0][0].length / 2);
-      currentY = -getCurrentShape().length;
-
-      // Check if spawn position is blocked (top reached)
-      if (!isValidPosition(currentX, currentY, currentRotation)) {
-        triggerGameOver();
-        return;
-      }
-
-      drawNextPiece();
-    }
-
-    // Generate random piece type
-    function randomPiece() {
-      const pieces = Object.keys(TETROMINOS);
-      return pieces[Math.floor(Math.random() * pieces.length)];
-    }
-
-    // Move piece down by one
-    function moveDown() {
-      if (isGameOver) return;
-      if (isValidPosition(currentX, currentY + 1, currentRotation)) {
-        currentY++;
-      } else {
-        placePiece();
-        clearLines();
-        spawnPiece();
-      }
-      draw();
-    }
-
-    // Move piece left
-    function moveLeft() {
-      if (isGameOver) return;
-      if (isValidPosition(currentX - 1, currentY, currentRotation)) {
-        currentX--;
-        draw();
-      }
-    }
-
-    // Move piece right
-    function moveRight() {
-      if (isGameOver) return;
-      if (isValidPosition(currentX + 1, currentY, currentRotation)) {
-        currentX++;
-        draw();
-      }
-    }
-
-    // Rotate piece clockwise
-    function rotate() {
-      if (isGameOver) return;
-      const nextRotation = (currentRotation + 1) % TETROMINOS[currentPiece].length;
-      if (isValidPosition(currentX, currentY, nextRotation)) {
-        currentRotation = nextRotation;
-        draw();
-      } else {
-        // Try wall kicks (simple)
-        if (isValidPosition(currentX - 1, currentY, nextRotation)) {
-          currentX--;
-          currentRotation = nextRotation;
-          draw();
-        } else if (isValidPosition(currentX + 1, currentY, nextRotation)) {
-          currentX++;
-          currentRotation = nextRotation;
-          draw();
-        }
-      }
-    }
-
-    // Hard drop piece with animation (soft drop effect)
-    function hardDrop() {
-      if (isGameOver) return;
-      if (softDropActive) return; // prevent multiple hard drops at once
-      softDropActive = true;
-
-      function stepDrop() {
-        if (isValidPosition(currentX, currentY + 1, currentRotation)) {
-          currentY++;
-          draw();
-          softDropTimer = setTimeout(stepDrop, 50);
-        } else {
-          placePiece();
-          clearLines();
-          spawnPiece();
-          draw();
-          softDropActive = false;
-        }
-      }
-      stepDrop();
-    }
-
-    // Update score and level display (desktop and mobile)
-    function updateScoreLevel() {
-      scoreEl.textContent = score;
-      levelEl.textContent = level;
-      scoreMobileEl.textContent = score;
-      levelMobileEl.textContent = level;
-    }
-
-    // Draw next piece preview desktop
-    function drawNextPiece() {
-      nextPieceEl.innerHTML = "";
-      const shape = TETROMINOS[nextPiece][0];
-      for (let r = 0; r < 4; r++) {
-        for (let c = 0; c < 4; c++) {
-          const cell = document.createElement("div");
-          cell.classList.add("cell");
-          if (shape[r] && shape[r][c]) {
-            cell.classList.add(COLORS[nextPiece]);
-          }
-          nextPieceEl.appendChild(cell);
-        }
-      }
-      drawNextPieceMobile();
-    }
-
-    // Draw next piece preview mobile
-    function drawNextPieceMobile() {
-      nextPieceMobileEl.innerHTML = "";
-      const shape = TETROMINOS[nextPiece][0];
-      for (let r = 0; r < 4; r++) {
-        for (let c = 0; c < 4; c++) {
-          const cell = document.createElement("div");
-          cell.classList.add("cell");
-          if (shape[r] && shape[r][c]) {
-            cell.classList.add(COLORS[nextPiece]);
-          }
-          nextPieceMobileEl.appendChild(cell);
-        }
-      }
-    }
-
-    // Game over handler with overlay and auto restart
-    function triggerGameOver() {
-      isGameOver = true;
-      clearInterval(dropTimer);
-      clearTimeout(softDropTimer);
-      softDropActive = false;
-      gameOverOverlay.hidden = false;
-      gameOverOverlay.classList.add("show");
-      // Remove current piece from board display
-      currentPiece = null;
-      draw();
-
-      // Auto restart after 3 seconds if user doesn't click
-      autoRestartTimeout = setTimeout(() => {
-        hideGameOverAndRestart();
-      }, 3000);
-    }
-
-    function hideGameOverAndRestart() {
-      gameOverOverlay.classList.remove("show");
-      setTimeout(() => {
-        gameOverOverlay.hidden = true;
-        startGame();
-      }, 300);
-    }
-
-    // Reset drop timer with current dropInterval
-    function resetDropTimer() {
-      if (dropTimer) clearInterval(dropTimer);
-      dropTimer = setInterval(() => {
-        if (!isGameOver && !softDropActive) moveDown();
-      }, dropInterval);
-    }
-
-    // Start or restart game
-    function startGame() {
-      isGameOver = false;
-      score = 0;
-      level = 1;
-      linesCleared = 0;
-      dropInterval = 1000;
-      updateScoreLevel();
-      initBoard();
-      spawnPiece();
-      draw();
-      resetDropTimer();
-      tetrisEl.focus();
-      gameOverOverlay.hidden = true;
-      gameOverOverlay.classList.remove("show");
-      if (autoRestartTimeout) clearTimeout(autoRestartTimeout);
-    }
-
-    // Keyboard controls
-    window.addEventListener("keydown", (e) => {
-      if (isGameOver) return;
-      switch (e.key) {
-        case "ArrowLeft":
-          e.preventDefault();
-          moveLeft();
-          break;
-        case "ArrowRight":
-          e.preventDefault();
-          moveRight();
-          break;
-        case "ArrowDown":
-          e.preventDefault();
-          moveDown();
-          break;
-        case "ArrowUp":
-          e.preventDefault();
-          rotate();
-          break;
-        case " ":
-          e.preventDefault();
-          hardDrop();
-          break;
-      }
-    });
-
-    // Mobile buttons controls
-    document.getElementById("btn-left").addEventListener("click", moveLeft);
-    document.getElementById("btn-right").addEventListener("click", moveRight);
-    document.getElementById("btn-down").addEventListener("click", moveDown);
-    document.getElementById("btn-rotate").addEventListener("click", rotate);
-    document.getElementById("btn-drop").addEventListener("click", hardDrop);
-
-    startButton.addEventListener("click", startGame);
-    gameOverRestartBtn.addEventListener("click", hideGameOverAndRestart);
-
-    // Initialize empty board on load
-    initBoard();
-  </script>
-</body>
-</html>
+<!-- Mobile controls -->
+<nav id="mobile-controls" class="fixed bottom-0 left-0 right-0 bg-slate-800 p-3 flex justify-center gap-4 md:hidden z-50">
+  <button id="btn-left" class="bg-slate-700 hover:bg-slate-600 active:bg-slate-500 rounded-lg p-3 flex items-center justify-center text-xl">
+    <i class="fas fa-arrow-left"></i>
+  </button>
+  <button id="btn-rotate"
