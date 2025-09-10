@@ -1,35 +1,382 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Página en Mejora</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f0f0f0;
-            text-align: center;
-        }
-        .message {
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        h1 {
-            color: #333;
-        }
-    </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Trickster</title>
+<style>
+  body { margin:0; font-family:'Segoe UI',Arial,sans-serif; background:linear-gradient(135deg,#0f1724,#1a2333); color:#fff; }
+  h1 { color:#00e5ff; text-align:center; margin:0 0 20px; font-size:2.2em; letter-spacing:2px; }
+  .wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; flex-direction:column; }
+  .panel { background:rgba(17,26,42,0.95); padding:30px 25px; border-radius:14px; box-shadow:0 0 35px rgba(0,0,0,0.7); max-width:950px; width:100%; text-align:center; animation:fadeIn 0.7s ease; }
+  .btn { background:#00e5ff; border:none; color:#06121a; font-weight:bold; padding:12px 18px; border-radius:10px; cursor:pointer; margin:8px; transition:transform 0.2s ease,background 0.3s; }
+  .btn:hover { transform:scale(1.05); background:#00bcd4; }
+  .btn:disabled { opacity:.5; cursor:not-allowed; }
+  .num-btn { background:#1c2537; border:none; color:#fff; padding:14px 20px; font-size:18px; border-radius:8px; cursor:pointer; transition:background 0.3s, transform 0.2s ease; }
+  .num-btn:hover { background:#2b3850; transform:scale(1.05); }
+  .num-btn[disabled] { opacity:.5; cursor:not-allowed; }
+  .nums { display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin:25px 0; }
+  .display { min-height:260px; margin-top:15px; }
+  .player-name { font-size:26px; font-weight:bold; margin-bottom:10px; color:#00e5ff; }
+  .player-desc { font-size:16px; color:#ddd; max-width:600px; margin:0 auto 14px; text-align:left; line-height:1.6; }
+  .player-image { width:190px; height:190px; border-radius:12px; object-fit:cover; margin-top:14px; box-shadow:0 0 12px rgba(0,229,255,0.6); }
+  .img-placeholder { width:190px; height:190px; border-radius:12px; background:#333; display:flex; align-items:center; justify-content:center; margin:14px auto; color:#bbb; font-size:14px; }
+  footer { margin-top:25px; font-size:14px; color:#aaa; text-align:center; }
+  .settings-btn { display:inline-block; margin-top:10px; }
+  @keyframes fadeIn { from{opacity:0;transform:scale(0.95);} to{opacity:1;transform:scale(1);} }
+</style>
 </head>
 <body>
-    <div class="message">
-        <h1>Se está mejorando esta página</h1>
-        <p>Espera la nueva actualización</p>
+
+<div class="wrap">
+  <!-- Pantalla inicio -->
+  <div id="startScreen" class="panel">
+    <h1>Trickster</h1>
+    <p>Guess the Intruder.</p>
+    <button class="btn" id="goToSetup">Iniciar</button>
+  </div>
+
+  <!-- Configuración -->
+  <div id="setup" class="panel" style="display:none">
+    <h1>Configurar Partida</h1>
+    <p>Elige la cantidad de jugadores (mínimo 3):</p>
+    <input type="number" id="playerCount" min="3" value="5" style="padding:8px;font-size:16px;text-align:center;margin:10px;border-radius:6px;border:none;" />
+    
+    <p>Elige la categoría:</p>
+    <select id="modeSelect" style="padding:8px;font-size:16px;margin:10px;border-radius:6px;border:none;">
+      <option value="all">Todos</option>
+      <option value="promesas">Promesas</option>
+      <option value="jóvenes promesas">Jóvenes Promesas</option>
+      <option value="leyendas">Leyendas</option>
+      <option value="actuales">Jugadores Actuales</option>
+      <option value="entrenadores">Entrenadores</option>
+    </select>
+
+    <p>Modo impostores:</p>
+    <select id="impostorMode" style="padding:8px;font-size:16px;margin:10px;border-radius:6px;border:none;">
+      <option value="exacto">Especificar cantidad</option>
+      <option value="aleatorio">Aleatorio</option>
+    </select>
+    <input type="number" id="exactImpostors" min="0" value="1" style="padding:8px;font-size:16px;text-align:center;margin:10px;border-radius:6px;border:none;" />
+
+    <br>
+    <button class="btn" id="startGame">Comenzar</button>
+  </div>
+
+  <!-- Juego -->
+  <div id="game" class="panel" style="display:none">
+    <h1>Trickster</h1>
+    <div class="nums" id="buttons"></div>
+    <div class="display">
+      <div class="player-name" id="displayName"></div>
+      <div class="player-desc" id="displayDesc"></div>
+      <div id="imgWrap"></div>
+      <div>
+        <button class="btn" id="readyBtn" style="display:none">Listo</button>
+        <button class="btn" id="skipBtn" style="display:none">Saltar Ronda</button>
+      </div>
     </div>
+    <div style="text-align:center;margin-top:10px">
+      <button class="btn" id="showImpostors" style="display:none">Ver Impostores</button>
+      <button class="btn" id="playAgain" style="display:none">Jugar otro</button>
+    </div>
+  </div>
+
+  <!-- Post-juego -->
+  <div id="afterGame" class="panel" style="display:none">
+    <h1>¿Qué quieres hacer?</h1>
+    <button class="btn" id="continueSame">Continuar con misma configuración</button>
+    <button class="btn" id="changeSettings">Cambiar configuración</button>
+  </div>
+
+  <footer>© 2025 - Todos los derechos reservados Negroni Studios</footer>
+</div>
+
+<script>
+const playersData = {
+    "LionelMessi": {
+        desc: "1. Nacionalidad: Argentino<br>\
+2. Equipo Actual: Inter Miami (MLS)<br>\
+3. Todos Sus Equipos: Barcelona, PSG, Inter Miami<br>\
+4. Características: Extremo derecho / falso 9, regate excepcional, visión de juego, capacidad de pase y definición, precisión en tiros libres<br>\
+5. Títulos (Algunos): Copa del Mundo 2022, Copa América 2021, Champions League (4), Balón de Oro (8 veces)",
+        img: "LionelMessi",
+        category: "actuales"
+    },
+    "CristianoRonaldo": {
+        desc: "1. Nacionalidad: Portugués<br>\
+2. Equipo Actual: Al Nassr (Arabia Saudita)<br>\
+3. Todos Sus Equipos: Sporting CP, Manchester United, Real Madrid, Juventus, Al Nassr<br>\
+4. Características: Delantero, remate con ambas piernas, juego aéreo, liderazgo<br>\
+5. Títulos (Algunos): Champions League (5), Eurocopa 2016, Nations League 2019",
+        img: "CristianoRonaldo",
+        category: "actuales"
+    },
+    "KylianMbappé": {
+        desc: "1. Nacionalidad: Francés<br>\
+2. Equipo Actual: Real Madrid (LaLiga)<br>\
+3. Todos Sus Equipos: Mónaco, PSG, Real Madrid<br>\
+4. Características: Extremo/Delantero, velocidad, definición, regate<br>\
+5. Títulos (Algunos): Copa del Mundo 2018, Finalista 2022, Ligue 1 (6), Champions League 2025",
+        img: "KylianMbappé",
+        category: "actuales"
+    },
+    "ErlingHaaland": {
+        desc: "1. Nacionalidad: Noruego<br>\
+2. Equipo Actual: Manchester City (Premier League)<br>\
+3. Todos Sus Equipos: Molde, RB Salzburg, Borussia Dortmund, Manchester City<br>\
+4. Características: Delantero centro, potencia física, remate, cabezazo<br>\
+5. Títulos (Algunos): Champions League 2023, Premier League (2), FA Cup",
+        img: "ErlingHaaland",
+        category: "actuales"
+    },
+    "NeymarJr": {
+        desc: "1. Nacionalidad: Brasileño<br>\
+2. Equipo Actual: Al Hilal (Arabia Saudita)<br>\
+3. Todos Sus Equipos: Santos, Barcelona, PSG, Al Hilal<br>\
+4. Características: Extremo, regate, creatividad, asistencias<br>\
+5. Títulos (Algunos): Champions League 2015, Libertadores 2011, Copa América 2019",
+        img: "NeymarJr",
+        category: "actuales"
+    },
+    "RobertLewandowski": {
+        desc: "1. Nacionalidad: Polaco<br>\
+2. Equipo Actual: Barcelona (LaLiga)<br>\
+3. Todos Sus Equipos: Lech Poznan, Borussia Dortmund, Bayern Múnich, Barcelona<br>\
+4. Características: Delantero goleador, remate, cabezazo<br>\
+5. Títulos (Algunos): Champions League 2020, Bundesliga (x10), LaLiga 2023",
+        img: "RobertLewandowski",
+        category: "actuales"
+    },
+    "KarimBenzema": {
+        desc: "1. Nacionalidad: Francés<br>\
+2. Equipo Actual: Al Ittihad (Arabia Saudita)<br>\
+3. Todos Sus Equipos: Lyon, Real Madrid, Al Ittihad<br>\
+4. Características: Delantero, visión de juego, definición<br>\
+5. Títulos (Algunos): Champions League (5), Balón de Oro 2022",
+        img: "KarimBenzema",
+        category: "actuales"
+    },
+    "MohamedSalah": {
+        desc: "1. Nacionalidad: Egipcio<br>\
+2. Equipo Actual: Liverpool (Premier League)<br>\
+3. Todos Sus Equipos: Basilea, Chelsea, Fiorentina, Roma, Liverpool<br>\
+4. Características: Extremo derecho, velocidad, regate, remate<br>\
+5. Títulos (Algunos): Champions League 2019, Premier League 2020",
+        img: "MohamedSalah",
+        category: "actuales"
+    },
+    "KevinDeBruyne": {
+        desc: "1. Nacionalidad: Belga<br>\
+2. Equipo Actual: Manchester City (Premier League)<br>\
+3. Todos Sus Equipos: Genk, Chelsea, Wolfsburgo, Manchester City<br>\
+4. Características: Mediocampista ofensivo, pase, visión, disparo de media distancia<br>\
+5. Títulos (Algunos): Champions League 2023, Premier League (5)",
+        img: "KevinDeBruyne",
+        category: "actuales"
+    },
+    "LukaModric": {
+        desc: "1. Nacionalidad: Croata<br>\
+2. Equipo Actual: Real Madrid (LaLiga)<br>\
+3. Todos Sus Equipos: Dinamo Zagreb, Tottenham, Real Madrid<br>\
+4. Características: Mediocampista, control de juego, pase, liderazgo<br>\
+5. Títulos (Algunos): Champions League (5), Balón de Oro 2018",
+        img: "LukaModric",
+        category: "actuales"
+    },
+    "ToniKroos": {
+        desc: "1. Nacionalidad: Alemán<br>\
+2. Equipo Actual: Retirado (2024, Real Madrid)<br>\
+3. Todos Sus Equipos: Bayern Múnich, Bayer Leverkusen, Real Madrid<br>\
+4. Características: Mediocampista, precisión en pases, control<br>\
+5. Títulos (Algunos): Champions League (5), Mundial 2014",
+        img: "ToniKroos",
+        category: "leyendas"
+    },
+    "ViniciusJr": {
+        desc: "1. Nacionalidad: Brasileño<br>\
+2. Equipo Actual: Real Madrid (LaLiga)<br>\
+3. Todos Sus Equipos: Flamengo, Real Madrid<br>\
+4. Características: Extremo izquierdo, velocidad, regate, desequilibrio<br>\
+5. Títulos (Algunos): Champions League 2022, LaLiga (2)",
+        img: "ViniciusJr",
+        category: "actuales"
+    },
+    "JudeBellingham": {
+        desc: "1. Nacionalidad: Inglés<br>\
+2. Equipo Actual: Real Madrid (LaLiga)<br>\
+3. Todos Sus Equipos: Birmingham, Borussia Dortmund, Real Madrid<br>\
+4. Características: Mediocampista box-to-box, fuerza, llegada, técnica<br>\
+5. Títulos (Algunos): Champions League 2025, LaLiga 2024",
+        img: "JudeBellingham",
+        category: "actuales"
+    },
+    "RodriHernandez": {
+        desc: "1. Nacionalidad: Español<br>\
+2. Equipo Actual: Manchester City (Premier League)<br>\
+3. Todos Sus Equipos: Villarreal, Atlético Madrid, Manchester City<br>\
+4. Características: Mediocampista defensivo, control, recuperación, pase<br>\
+5. Títulos (Algunos): Champions League 2023, Eurocopa 2024",
+        img: "RodriHernandez",
+        category: "actuales"
+    },
+    "HarryKane": {
+        desc: "1. Nacionalidad: Inglés<br>\
+2. Equipo Actual: Bayern Múnich (Bundesliga)<br>\
+3. Todos Sus Equipos: Tottenham, Bayern Múnich<br>\
+4. Características: Delantero centro, remate, cabezazo, juego de espaldas<br>\
+5. Títulos (Algunos): Bundesliga 2024, Bota de Oro Premier League (3)",
+        img: "HarryKane",
+        category: "actuales"
+    },
+    "PhilFoden": {
+        desc: "1. Nacionalidad: Inglés<br>\
+2. Equipo Actual: Manchester City (Premier League)<br>\
+3. Todos Sus Equipos: Manchester City<br>\
+4. Características: Extremo/Mediocampista ofensivo, regate, pase, definición<br>\
+5. Títulos (Algunos): Champions League 2023, Premier League (4)",
+        img: "PhilFoden",
+        category: "promesas"
+    },
+    "PedriGonzalez": {
+        desc: "1. Nacionalidad: Español<br>\
+2. Equipo Actual: Barcelona (LaLiga)<br>\
+3. Todos Sus Equipos: Las Palmas, Barcelona<br>\
+4. Características: Mediocampista ofensivo, pase, regate, inteligencia táctica<br>\
+5. Títulos (Algunos): Copa del Rey 2021, Eurocopa Sub-21",
+        img: "PedriGonzalez",
+        category: "promesas"
+    },
+    "GaviPaez": {
+        desc: "1. Nacionalidad: Español<br>\
+2. Equipo Actual: Barcelona (LaLiga)<br>\
+3. Todos Sus Equipos: Barcelona<br>\
+4. Características: Mediocampista, intensidad, presión, técnica<br>\
+5. Títulos (Algunos): Nations League 2023, Copa del Rey 2021",
+        img: "GaviPaez",
+        category: "promesas"
+    },
+    "AntoineGriezmann": {
+        desc: "1. Nacionalidad: Francés<br>\
+2. Equipo Actual: Atlético de Madrid (LaLiga)<br>\
+3. Todos Sus Equipos: Real Sociedad, Atlético de Madrid, Barcelona<br>\
+4. Características: Delantero/mediapunta, visión, sacrificio, gol<br>\
+5. Títulos (Algunos): Copa del Mundo 2018, Europa League 2018",
+        img: "AntoineGriezmann",
+        category: "actuales"
+    },
+    "OusmaneDembele": {
+        desc: "1. Nacionalidad: Francés<br>\
+2. Equipo Actual: PSG (Ligue 1)<br>\
+3. Todos Sus Equipos: Rennes, Borussia Dortmund, Barcelona, PSG<br>\
+4. Características: Extremo, regate, velocidad, desequilibrio<br>\
+5. Títulos (Algunos): Mundial 2018, Ligue 1, LaLiga",
+        img: "OusmaneDembele",
+        category: "actuales"
+    }
+};
+
+// --- Juego ---
+let chosenPlayer=""; let impostorPositions=new Set(); let totalPlayers=0; let playerDeck=[]; 
+let currentSettings={playerCount:5, mode:"all", impostorMode:"exacto", impostorCount:1};
+
+const startScreen=document.getElementById("startScreen");
+const setupDiv=document.getElementById("setup");
+const gameDiv=document.getElementById("game");
+const buttonsDiv=document.getElementById("buttons");
+const displayName=document.getElementById("displayName");
+const displayDesc=document.getElementById("displayDesc");
+const imgWrap=document.getElementById("imgWrap");
+const readyBtn=document.getElementById("readyBtn");
+const playAgainBtn=document.getElementById("playAgain");
+const showImpostorsBtn=document.getElementById("showImpostors");
+const skipBtn=document.getElementById("skipBtn");
+const afterGameDiv=document.getElementById("afterGame");
+const continueSameBtn=document.getElementById("continueSame");
+const changeSettingsBtn=document.getElementById("changeSettings");
+const playerCountInput=document.getElementById("playerCount");
+const modeSelect=document.getElementById("modeSelect");
+const impostorModeSelect=document.getElementById("impostorMode");
+const exactImpostorsInput=document.getElementById("exactImpostors");
+
+// Config impostor
+impostorModeSelect.addEventListener("change",()=>{
+  if(impostorModeSelect.value==="aleatorio"){ exactImpostorsInput.disabled=true; exactImpostorsInput.style.opacity=0.5; }
+  else { exactImpostorsInput.disabled=false; exactImpostorsInput.style.opacity=1; }
+});
+
+// Navegación
+document.getElementById("goToSetup").addEventListener("click",()=>{ startScreen.style.display="none"; setupDiv.style.display="block"; });
+
+document.getElementById("startGame").addEventListener("click",()=>{
+  const count=parseInt(playerCountInput.value,10);
+  if(isNaN(count)||count<3){ alert("Debes elegir al menos 3 jugadores."); return; }
+  totalPlayers=count;
+  currentSettings={ playerCount:count, mode:modeSelect.value, impostorMode:impostorModeSelect.value, impostorCount:parseInt(exactImpostorsInput.value,10)};
+  generatePlayerDeck(); startNewGame();
+  setupDiv.style.display="none"; gameDiv.style.display="block";
+});
+
+// Generar baraja
+function generatePlayerDeck(){
+  playerDeck=Object.keys(playersData).filter(n=>{
+    const cat=playersData[n].category;
+    return currentSettings.mode==="all"||cat===currentSettings.mode;
+  });
+  shuffleDeck(playerDeck);
+}
+function shuffleDeck(deck){ for(let i=deck.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [deck[i],deck[j]]=[deck[j],deck[i]]; } }
+function drawPlayer(){ if(playerDeck.length===0) generatePlayerDeck(); return playerDeck.pop(); }
+function getRandomImpostors(total){ return Math.floor(Math.random()*(total+1)); }
+
+function startNewGame(){
+  chosenPlayer=drawPlayer(); impostorPositions.clear();
+  let impostorCount=currentSettings.impostorCount;
+  if(currentSettings.impostorMode==="aleatorio") impostorCount=getRandomImpostors(totalPlayers);
+  while(impostorPositions.size<impostorCount){ impostorPositions.add(Math.floor(Math.random()*totalPlayers)+1); }
+
+  buttonsDiv.innerHTML="";
+  for(let i=1;i<=totalPlayers;i++){ const b=document.createElement("button"); b.textContent=i; b.className="num-btn"; b.addEventListener("click",()=>revealNumber(i,b)); buttonsDiv.appendChild(b); }
+
+  displayName.textContent=""; displayDesc.innerHTML=""; imgWrap.innerHTML="";
+  readyBtn.style.display="none"; skipBtn.style.display="inline-block"; playAgainBtn.style.display="none"; showImpostorsBtn.style.display="none";
+}
+
+// Mostrar imagen
+function loadPlayerImage(name,onSuccess,onFail){
+  const tryExt=(ext)=>{ const img=new Image(); img.className="player-image";
+    img.onload=()=>onSuccess(img); img.onerror=()=>{ if(ext==".jpg")tryExt(".png"); else onFail(); }; img.src="Jugadores/"+name+ext; };
+  tryExt(".jpg");
+}
+function showPlaceholder(text){ const d=document.createElement("div"); d.className="img-placeholder"; d.textContent=text; return d; }
+
+// Revelar
+function revealNumber(num,btn){
+  btn.disabled=true; displayName.textContent=""; displayDesc.innerHTML=""; imgWrap.innerHTML="";
+  if(impostorPositions.has(num)){
+    displayName.textContent="IMPOSTOR"; displayDesc.textContent="Mantente en secreto... ¡Engaña a todos!";
+    loadPlayerImage("Impostor",(img)=>imgWrap.appendChild(img),()=>imgWrap.appendChild(showPlaceholder("Impostor")));
+  } else {
+    displayName.textContent=chosenPlayer;
+    const data=playersData[chosenPlayer];
+    displayDesc.innerHTML=data.desc; // Aquí usamos innerHTML para que se vean los <br>
+    loadPlayerImage(data.img,(img)=>imgWrap.appendChild(img),()=>imgWrap.appendChild(showPlaceholder("Sin imagen")));
+  }
+  readyBtn.style.display="inline-block"; readyBtn.onclick=()=>{ nextRound(); };
+}
+function nextRound(){ displayName.textContent=""; displayDesc.innerHTML=""; imgWrap.innerHTML=""; readyBtn.style.display="none"; skipBtn.style.display="none"; playAgainBtn.style.display="inline-block"; showImpostorsBtn.style.display="inline-block"; }
+
+skipBtn.addEventListener("click",()=>{ nextRound(); });
+showImpostorsBtn.addEventListener("click",()=>{
+  displayName.textContent="Los impostores eran:"; displayDesc.innerHTML=""; imgWrap.innerHTML="";
+  impostorPositions.forEach(num=>{ const p=document.createElement("div"); p.textContent="Jugador "+num+" (Impostor)"; imgWrap.appendChild(p); });
+  const data=playersData[chosenPlayer]; const info=document.createElement("div"); info.style.marginTop="15px"; info.innerHTML="<strong>El jugador real era:</strong> "+chosenPlayer; imgWrap.appendChild(info);
+  loadPlayerImage(data.img,(img)=>imgWrap.appendChild(img),()=>imgWrap.appendChild(showPlaceholder("Sin imagen")));
+});
+
+playAgainBtn.addEventListener("click",()=>{ gameDiv.style.display="none"; afterGameDiv.style.display="block"; });
+continueSameBtn.addEventListener("click",()=>{ afterGameDiv.style.display="none"; generatePlayerDeck(); startNewGame(); gameDiv.style.display="block"; });
+changeSettingsBtn.addEventListener("click",()=>{ afterGameDiv.style.display="none"; setupDiv.style.display="block"; });
+</script>
 </body>
 </html>
