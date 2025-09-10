@@ -1,177 +1,234 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Juego de Impostores</title>
-  <style>
-    body { font-family: Arial, sans-serif; background: #f2f2f2; text-align: center; }
-    h1 { margin: 20px; }
-    .config, .game, .post-game { margin: 20px auto; padding: 20px; background: white; border-radius: 8px; width: 80%; max-width: 700px; }
-    .hidden { display: none; }
-    .players-grid { display: flex; flex-wrap: wrap; justify-content: center; margin-top: 20px; }
-    .player-card { width: 150px; margin: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 6px; background: #fafafa; }
-    .player-card img { width: 100%; border-radius: 6px; }
-    .buttons { margin: 15px; }
-    button { margin: 5px; padding: 10px 15px; font-size: 14px; cursor: pointer; }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Trickster</title>
+<style>
+  body { margin:0; font-family:'Segoe UI',Arial,sans-serif; background:linear-gradient(135deg,#0f1724,#1a2333); color:#fff; }
+  h1 { color:#00e5ff; text-align:center; margin:0 0 20px; font-size:2.2em; letter-spacing:2px; }
+  .wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; flex-direction:column; }
+  .panel { background:rgba(17,26,42,0.95); padding:30px 25px; border-radius:14px; box-shadow:0 0 35px rgba(0,0,0,0.7); max-width:950px; width:100%; text-align:center; animation:fadeIn 0.7s ease; }
+  .btn { background:#00e5ff; border:none; color:#06121a; font-weight:bold; padding:12px 18px; border-radius:10px; cursor:pointer; margin:8px; transition:transform 0.2s ease,background 0.3s; }
+  .btn:hover { transform:scale(1.05); background:#00bcd4; }
+  .btn:disabled { opacity:.5; cursor:not-allowed; }
+  .num-btn { background:#1c2537; border:none; color:#fff; padding:14px 20px; font-size:18px; border-radius:8px; cursor:pointer; transition:background 0.3s, transform 0.2s ease; }
+  .num-btn:hover { background:#2b3850; transform:scale(1.05); }
+  .num-btn[disabled] { opacity:.5; cursor:not-allowed; }
+  .nums { display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin:25px 0; }
+  .display { min-height:260px; margin-top:15px; }
+  .player-name { font-size:26px; font-weight:bold; margin-bottom:10px; color:#00e5ff; }
+  .player-desc { font-size:16px; color:#ddd; max-width:600px; margin:0 auto 14px; text-align:left; line-height:1.6; }
+  .player-image { width:190px; height:190px; border-radius:12px; object-fit:cover; margin-top:14px; box-shadow:0 0 12px rgba(0,229,255,0.6); }
+  .img-placeholder { width:190px; height:190px; border-radius:12px; background:#333; display:flex; align-items:center; justify-content:center; margin:14px auto; color:#bbb; font-size:14px; }
+  footer { margin-top:25px; font-size:14px; color:#aaa; text-align:center; }
+  .settings-btn { display:inline-block; margin-top:10px; }
+  @keyframes fadeIn { from{opacity:0;transform:scale(0.95);} to{opacity:1;transform:scale(1);} }
+</style>
 </head>
 <body>
 
-  <h1>Juego de Impostores ⚽</h1>
-
-  <!-- CONFIGURACIÓN -->
-  <div id="config-section" class="config">
-    <h2>Configuración de la Partida</h2>
-    <label>Cantidad de jugadores:
-      <input type="number" id="numPlayers" min="2" max="20" value="4">
-    </label>
-    <br><br>
-
-    <label>
-      <input type="radio" name="impostorMode" value="manual" checked>
-      Elegir cantidad de impostores
-    </label>
-    <input type="number" id="numImpostors" min="0" value="1">
-
-    <br>
-    <label>
-      <input type="radio" name="impostorMode" value="random">
-      Aleatorio
-    </label>
-
-    <br><br>
-    <button onclick="startGame()">Jugar</button>
+<div class="wrap">
+  <!-- Pantalla inicio -->
+  <div id="startScreen" class="panel">
+    <h1>Trickster</h1>
+    <p>Guess the Intruder.</p>
+    <button class="btn" id="goToSetup">Iniciar</button>
   </div>
 
-  <!-- PARTIDA -->
-  <div id="game-section" class="game hidden">
-    <h2>Jugadores</h2>
-    <div id="playersContainer" class="players-grid"></div>
-    <div class="buttons">
-      <button onclick="endGame()">Terminar Ronda</button>
-      <button onclick="skipRound()">Saltar</button>
+  <!-- Configuración -->
+  <div id="setup" class="panel" style="display:none">
+    <h1>Configurar Partida</h1>
+    <p>Elige la cantidad de jugadores (mínimo 3):</p>
+    <input type="number" id="playerCount" min="3" value="5" style="padding:8px;font-size:16px;text-align:center;margin:10px;border-radius:6px;border:none;" />
+    
+    <p>Elige la categoría:</p>
+    <select id="modeSelect" style="padding:8px;font-size:16px;margin:10px;border-radius:6px;border:none;">
+      <option value="all">Todos</option>
+      <option value="promesas">Promesas</option>
+      <option value="jóvenes promesas">Jóvenes Promesas</option>
+      <option value="leyendas">Leyendas</option>
+      <option value="actuales">Jugadores Actuales</option>
+      <option value="entrenadores">Entrenadores</option>
+    </select>
+
+    <p>Modo impostores:</p>
+    <select id="impostorMode" style="padding:8px;font-size:16px;margin:10px;border-radius:6px;border:none;">
+      <option value="exacto">Especificar cantidad</option>
+      <option value="aleatorio">Aleatorio</option>
+    </select>
+    <input type="number" id="exactImpostors" min="0" value="1" style="padding:8px;font-size:16px;text-align:center;margin:10px;border-radius:6px;border:none;" />
+
+    <br>
+    <button class="btn" id="startGame">Comenzar</button>
+  </div>
+
+  <!-- Juego -->
+  <div id="game" class="panel" style="display:none">
+    <h1>Trickster</h1>
+    <div class="nums" id="buttons"></div>
+    <div class="display">
+      <div class="player-name" id="displayName"></div>
+      <div class="player-desc" id="displayDesc"></div>
+      <div id="imgWrap"></div>
+      <div>
+        <button class="btn" id="readyBtn" style="display:none">Listo</button>
+        <button class="btn" id="skipBtn" style="display:none">Saltar Ronda</button>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:10px">
+      <button class="btn" id="showImpostors" style="display:none">Ver Impostores</button>
+      <button class="btn" id="playAgain" style="display:none">Jugar otro</button>
     </div>
   </div>
 
-  <!-- POST GAME -->
-  <div id="post-game-section" class="post-game hidden">
-    <h2>¿Qué quieres hacer?</h2>
-    <button onclick="continueSame()">Continuar con las mismas configuraciones</button>
-    <button onclick="changeConfig()">Cambiar configuraciones</button>
+  <!-- Post-juego -->
+  <div id="afterGame" class="panel" style="display:none">
+    <h1>¿Qué quieres hacer?</h1>
+    <button class="btn" id="continueSame">Continuar con misma configuración</button>
+    <button class="btn" id="changeSettings">Cambiar configuración</button>
   </div>
 
-  <script>
-    const playersData = {
-      "Pelé": {
-        desc: "1. Nacionalidad: Brasileño<br>\
+  <footer>© 2025 - Todos los derechos reservados Negroni Studios</footer>
+</div>
+
+<script>
+const playersData = {
+   "Pelé": {
+       desc: "1. Nacionalidad: Brasileño<br>\
 2. Equipo Actual: Retirado<br>\
 3. Todos Sus Equipos: Santos, New York Cosmos<br>\
 4. Características: Delantero goleador, técnica depurada, velocidad, gran visión de juego<br>\
 5. Títulos (Algunos): Copa del Mundo 1958/62/70, Copa Libertadores, Balón de Oro honorífico",
-        img: "Pelé.jpg",
-        category: "leyendas"
-      },
-      "DiegoMaradona": {
-        desc: "1. Nacionalidad: Argentino<br>\
+       img: "Pelé", category:"leyendas"
+   },  
+   "DiegoMaradona": {
+       desc: "1. Nacionalidad: Argentino<br>\
 2. Equipo Actual: Retirado<br>\
 3. Todos Sus Equipos: Argentinos Juniors, Boca Juniors, Barcelona, Napoli, Sevilla<br>\
 4. Características: Gran regate, visión de juego, liderazgo, tiros libres precisos<br>\
 5. Títulos (Algunos): Copa del Mundo 1986, Serie A, Copa UEFA, Balón de Oro honorífico",
-        img: "DiegoMaradona.jpg",
-        category: "leyendas"
-      },
-      "LionelMessi": {
-        desc: "1. Nacionalidad: Argentino<br>\
+       img: "DiegoMaradona", category:"leyendas"
+   },  
+   "LionelMessi": {
+       desc: "1. Nacionalidad: Argentino<br>\
 2. Equipo Actual: Inter Miami<br>\
 3. Todos Sus Equipos: Barcelona, PSG, Inter Miami<br>\
 4. Características: Delantero / Extremo derecho o falso 9, regate excepcional, visión de juego, gran capacidad de pase y definición, liderazgo en cancha, precisión en tiros libres<br>\
 5. Títulos (Algunos): Copa del Mundo 2022, Copa América 2021, UEFA Champions League 2006/09/11/15, LaLiga 10 títulos, Balón de Oro 7 veces",
-        img: "LionelMessi.jpg",
-        category: "actuales"
-      },
-      "CristianoRonaldo": {
-        desc: "1. Nacionalidad: Portugués<br>\
+       img: "LionelMessi", category:"actuales"
+   },                      
+   "CristianoRonaldo": {
+       desc: "1. Nacionalidad: Portugués<br>\
 2. Equipo Actual: Al Nassr<br>\
 3. Todos Sus Equipos: Sporting CP, Manchester United, Real Madrid, Juventus, Al Nassr<br>\
 4. Características: Delantero potente, velocidad, gran remate con ambos pies, liderazgo y disciplina<br>\
 5. Títulos (Algunos): UEFA Champions League 2008/14/16/17/18, Eurocopa 2016, Liga de España, Serie A, Premier League",
-        img: "CristianoRonaldo.jpg",
-        category: "actuales"
-      }
-    };
+       img: "CristianoRonaldo", category:"actuales"
+   }
+};
 
-    let config = {};
+// --- Juego ---
+let chosenPlayer=""; let impostorPositions=new Set(); let totalPlayers=0; let playerDeck=[]; 
+let currentSettings={playerCount:5, mode:"all", impostorMode:"exacto", impostorCount:1};
 
-    // Habilitar/deshabilitar input de impostores
-    document.querySelectorAll("input[name='impostorMode']").forEach(radio => {
-      radio.addEventListener("change", () => {
-        const mode = document.querySelector("input[name='impostorMode']:checked").value;
-        document.getElementById("numImpostors").disabled = (mode === "random");
-      });
-    });
+const startScreen=document.getElementById("startScreen");
+const setupDiv=document.getElementById("setup");
+const gameDiv=document.getElementById("game");
+const buttonsDiv=document.getElementById("buttons");
+const displayName=document.getElementById("displayName");
+const displayDesc=document.getElementById("displayDesc");
+const imgWrap=document.getElementById("imgWrap");
+const readyBtn=document.getElementById("readyBtn");
+const playAgainBtn=document.getElementById("playAgain");
+const showImpostorsBtn=document.getElementById("showImpostors");
+const skipBtn=document.getElementById("skipBtn");
+const afterGameDiv=document.getElementById("afterGame");
+const continueSameBtn=document.getElementById("continueSame");
+const changeSettingsBtn=document.getElementById("changeSettings");
+const playerCountInput=document.getElementById("playerCount");
+const modeSelect=document.getElementById("modeSelect");
+const impostorModeSelect=document.getElementById("impostorMode");
+const exactImpostorsInput=document.getElementById("exactImpostors");
 
-    function startGame() {
-      const numPlayers = parseInt(document.getElementById("numPlayers").value);
-      const mode = document.querySelector("input[name='impostorMode']:checked").value;
-      let impostors;
+// Config impostor
+impostorModeSelect.addEventListener("change",()=>{
+  if(impostorModeSelect.value==="aleatorio"){ exactImpostorsInput.disabled=true; exactImpostorsInput.style.opacity=0.5; }
+  else { exactImpostorsInput.disabled=false; exactImpostorsInput.style.opacity=1; }
+});
 
-      if (mode === "manual") {
-        impostors = parseInt(document.getElementById("numImpostors").value);
-        if (impostors > numPlayers) impostors = numPlayers;
-      } else {
-        // Aleatorio con probabilidad uniforme
-        impostors = Math.floor(Math.random() * (numPlayers + 1));
-      }
+// Navegación
+document.getElementById("goToSetup").addEventListener("click",()=>{ startScreen.style.display="none"; setupDiv.style.display="block"; });
 
-      config = { numPlayers, impostors, mode };
+document.getElementById("startGame").addEventListener("click",()=>{
+  const count=parseInt(playerCountInput.value,10);
+  if(isNaN(count)||count<3){ alert("Debes elegir al menos 3 jugadores."); return; }
+  totalPlayers=count;
+  currentSettings={ playerCount:count, mode:modeSelect.value, impostorMode:impostorModeSelect.value, impostorCount:parseInt(exactImpostorsInput.value,10)};
+  generatePlayerDeck(); startNewGame();
+  setupDiv.style.display="none"; gameDiv.style.display="block";
+});
 
-      document.getElementById("config-section").classList.add("hidden");
-      document.getElementById("game-section").classList.remove("hidden");
+// Generar baraja
+function generatePlayerDeck(){
+  playerDeck=Object.keys(playersData).filter(n=>{
+    const cat=playersData[n].category;
+    return currentSettings.mode==="all"||cat===currentSettings.mode;
+  });
+  shuffleDeck(playerDeck);
+}
+function shuffleDeck(deck){ for(let i=deck.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [deck[i],deck[j]]=[deck[j],deck[i]]; } }
+function drawPlayer(){ if(playerDeck.length===0) generatePlayerDeck(); return playerDeck.pop(); }
+function getRandomImpostors(total){ return Math.floor(Math.random()*(total+1)); }
 
-      renderPlayers(numPlayers);
-      alert(`Hay ${impostors} impostores en esta partida`);
-    }
+function startNewGame(){
+  chosenPlayer=drawPlayer(); impostorPositions.clear();
+  let impostorCount=currentSettings.impostorCount;
+  if(currentSettings.impostorMode==="aleatorio") impostorCount=getRandomImpostors(totalPlayers);
+  while(impostorPositions.size<impostorCount){ impostorPositions.add(Math.floor(Math.random()*totalPlayers)+1); }
 
-    function renderPlayers(numPlayers) {
-      const container = document.getElementById("playersContainer");
-      container.innerHTML = "";
+  buttonsDiv.innerHTML="";
+  for(let i=1;i<=totalPlayers;i++){ const b=document.createElement("button"); b.textContent=i; b.className="num-btn"; b.addEventListener("click",()=>revealNumber(i,b)); buttonsDiv.appendChild(b); }
 
-      const names = Object.keys(playersData);
-      for (let i = 0; i < numPlayers; i++) {
-        const name = names[i % names.length]; // reutiliza si faltan jugadores
-        const player = playersData[name];
-        const card = document.createElement("div");
-        card.className = "player-card";
-        card.innerHTML = `
-          <img src="img/${player.img}" alt="${name}">
-          <h4>${name}</h4>
-          <p><b>Categoría:</b> ${player.category}</p>
-          <p>${player.desc}</p>
-        `;
-        container.appendChild(card);
-      }
-    }
+  displayName.textContent=""; displayDesc.innerHTML=""; imgWrap.innerHTML="";
+  readyBtn.style.display="none"; skipBtn.style.display="inline-block"; playAgainBtn.style.display="none"; showImpostorsBtn.style.display="none";
+}
 
-    function endGame() {
-      document.getElementById("game-section").classList.add("hidden");
-      document.getElementById("post-game-section").classList.remove("hidden");
-    }
+// Mostrar imagen
+function loadPlayerImage(name,onSuccess,onFail){
+  const tryExt=(ext)=>{ const img=new Image(); img.className="player-image";
+    img.onload=()=>onSuccess(img); img.onerror=()=>{ if(ext==".jpg")tryExt(".png"); else onFail(); }; img.src="Jugadores/"+name+ext; };
+  tryExt(".jpg");
+}
+function showPlaceholder(text){ const d=document.createElement("div"); d.className="img-placeholder"; d.textContent=text; return d; }
 
-    function skipRound() {
-      endGame(); // funciona igual que terminar
-    }
+// Revelar
+function revealNumber(num,btn){
+  btn.disabled=true; displayName.textContent=""; displayDesc.innerHTML=""; imgWrap.innerHTML="";
+  if(impostorPositions.has(num)){
+    displayName.textContent="IMPOSTOR"; displayDesc.textContent="Mantente en secreto... ¡Engaña a todos!";
+    loadPlayerImage("Impostor",(img)=>imgWrap.appendChild(img),()=>imgWrap.appendChild(showPlaceholder("Impostor")));
+  } else {
+    displayName.textContent=chosenPlayer;
+    const data=playersData[chosenPlayer];
+    displayDesc.innerHTML=data.desc; // Aquí usamos innerHTML para que se vean los <br>
+    loadPlayerImage(data.img,(img)=>imgWrap.appendChild(img),()=>imgWrap.appendChild(showPlaceholder("Sin imagen")));
+  }
+  readyBtn.style.display="inline-block"; readyBtn.onclick=()=>{ nextRound(); };
+}
+function nextRound(){ displayName.textContent=""; displayDesc.innerHTML=""; imgWrap.innerHTML=""; readyBtn.style.display="none"; skipBtn.style.display="none"; playAgainBtn.style.display="inline-block"; showImpostorsBtn.style.display="inline-block"; }
 
-    function continueSame() {
-      document.getElementById("post-game-section").classList.add("hidden");
-      document.getElementById("game-section").classList.remove("hidden");
-      renderPlayers(config.numPlayers);
-      alert(`Nueva partida con ${config.impostors} impostores (configuración anterior)`);
-    }
+skipBtn.addEventListener("click",()=>{ nextRound(); });
+showImpostorsBtn.addEventListener("click",()=>{
+  displayName.textContent="Los impostores eran:"; displayDesc.innerHTML=""; imgWrap.innerHTML="";
+  impostorPositions.forEach(num=>{ const p=document.createElement("div"); p.textContent="Jugador "+num+" (Impostor)"; imgWrap.appendChild(p); });
+  const data=playersData[chosenPlayer]; const info=document.createElement("div"); info.style.marginTop="15px"; info.innerHTML="<strong>El jugador real era:</strong> "+chosenPlayer; imgWrap.appendChild(info);
+  loadPlayerImage(data.img,(img)=>imgWrap.appendChild(img),()=>imgWrap.appendChild(showPlaceholder("Sin imagen")));
+});
 
-    function changeConfig() {
-      document.getElementById("post-game-section").classList.add("hidden");
-      document.getElementById("config-section").classList.remove("hidden");
-    }
-  </script>
+playAgainBtn.addEventListener("click",()=>{ gameDiv.style.display="none"; afterGameDiv.style.display="block"; });
+continueSameBtn.addEventListener("click",()=>{ afterGameDiv.style.display="none"; generatePlayerDeck(); startNewGame(); gameDiv.style.display="block"; });
+changeSettingsBtn.addEventListener("click",()=>{ afterGameDiv.style.display="none"; setupDiv.style.display="block"; });
+</script>
 </body>
 </html>
