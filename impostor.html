@@ -1,922 +1,118 @@
 <!doctype html>
+
 <html lang="es">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Trickster</title>
-<style>
-  body { margin:0; font-family:'Segoe UI',Arial,sans-serif; background:linear-gradient(135deg,#0f1724,#1a2333); color:#fff; }
-  h1 { color:#00e5ff; text-align:center; margin:0 0 20px; font-size:2.2em; letter-spacing:2px; }
-  .wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; flex-direction:column; }
-  .panel { background:rgba(17,26,42,0.95); padding:30px 25px; border-radius:14px; box-shadow:0 0 35px rgba(0,0,0,0.7); max-width:950px; width:100%; text-align:center; animation:fadeIn 0.7s ease; }
-  .btn { background:#00e5ff; border:none; color:#06121a; font-weight:bold; padding:12px 18px; border-radius:10px; cursor:pointer; margin:8px; transition:transform 0.2s ease,background 0.3s; }
-  .btn:hover { transform:scale(1.05); background:#00bcd4; }
-  .btn:disabled { opacity:.5; cursor:not-allowed; }
-  .num-btn { background:#1c2537; border:none; color:#fff; padding:14px 20px; font-size:18px; border-radius:8px; cursor:pointer; transition:background 0.3s, transform 0.2s ease; }
-  .num-btn:hover { background:#2b3850; transform:scale(1.05); }
-  .num-btn[disabled] { opacity:.5; cursor:not-allowed; }
-  .nums { display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin:25px 0; }
-  .display { min-height:260px; margin-top:15px; }
-  .player-name { font-size:26px; font-weight:bold; margin-bottom:10px; color:#00e5ff; }
-  .player-desc { font-size:16px; color:#ddd; max-width:600px; margin:0 auto 14px; text-align:left; line-height:1.6; }
-  .player-image { width:190px; height:190px; border-radius:12px; object-fit:cover; margin-top:14px; box-shadow:0 0 12px rgba(0,229,255,0.6); }
-  .img-placeholder { width:190px; height:190px; border-radius:12px; background:#333; display:flex; align-items:center; justify-content:center; margin:14px auto; color:#bbb; font-size:14px; }
-  footer { margin-top:25px; font-size:14px; color:#aaa; text-align:center; }
-  .settings-btn { display:inline-block; margin-top:10px; }
-  @keyframes fadeIn { from{opacity:0;transform:scale(0.95);} to{opacity:1;transform:scale(1);} }
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Trickster — Actualización</title>
+  <style>
+    :root{
+      --bg1:#0f1724;
+      --bg2:#0b1220;
+      --card:#0f1724cc;
+      --accent:#8b5cf6;
+      --muted:#9aa6b2;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial}
+    body{
+      background: radial-gradient(1200px 600px at 10% 10%, rgba(139,92,246,0.12), transparent),
+                  radial-gradient(900px 500px at 90% 90%, rgba(59,130,246,0.08), transparent),
+                  linear-gradient(135deg,var(--bg1),var(--bg2));
+      display:flex;align-items:center;justify-content:center;padding:32px;color:#e6eef7;
+      -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+    }
+    .card{
+      width:100%;max-width:980px;padding:36px;border-radius:18px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      box-shadow: 0 10px 30px rgba(2,6,23,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+      display:grid;grid-template-columns:120px 1fr;gap:22px;align-items:center;
+      backdrop-filter: blur(6px);
+    }
+    .logo{
+      height:120px;width:120px;border-radius:16px;display:flex;align-items:center;justify-content:center;
+      background:linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      border: 1px solid rgba(255,255,255,0.04);
+    }
+    .logo svg{width:72px;height:72px;filter:drop-shadow(0 6px 14px rgba(11,22,45,0.6));}
+    h1{margin:0;font-size:28px;letter-spacing:-0.6px}
+    p.lead{margin:8px 0 0;color:var(--muted);font-size:15px}
+    .right{
+      display:flex;flex-direction:column;gap:18px;padding-right:4px
+    }
+    .status{
+      display:flex;align-items:center;gap:12px;flex-wrap:wrap
+    }
+    .pill{
+      padding:10px 14px;border-radius:999px;background:linear-gradient(90deg, rgba(139,92,246,0.14), rgba(59,130,246,0.06));
+      font-weight:600;color:var(--accent);border:1px solid rgba(139,92,246,0.12)
+    }
+    .message{font-size:18px;font-weight:700}
+    .sub{color:var(--muted);font-size:14px}
+    .loader{display:flex;align-items:center;gap:8px}
+    .dots span{display:inline-block;width:8px;height:8px;margin-right:6px;border-radius:50%;background:linear-gradient(180deg,var(--accent),#3b82f6);opacity:0;animation:dots 1.2s infinite}
+    .dots span:nth-child(2){animation-delay:0.1s}
+    .dots span:nth-child(3){animation-delay:0.2s}
+    @keyframes dots{0%{transform:translateY(0);opacity:0.15}30%{transform:translateY(-8px);opacity:1}60%{transform:translateY(0);opacity:0.35}100%{transform:translateY(0);opacity:0.15}}/* responsive */
+@media (max-width:640px){
+  .card{grid-template-columns:1fr;row-gap:18px;padding:28px}
+  .logo{height:88px;width:88px;margin:0 auto}
+  h1{font-size:22px;text-align:center}
+  .right{align-items:center;text-align:center}
+}
+
+/* decorative corner */
+.corner{
+  position:absolute;inset:auto 28px 28px auto;transform:rotate(-12deg);opacity:0.06;font-weight:800;font-size:48px;color:#fff;pointer-events:none
+}
+
+  </style>
 </head>
 <body>
-
-<div class="wrap">
-  <!-- Pantalla inicio -->
-  <div id="startScreen" class="panel">
-    <h1>Trickster</h1>
-    <p>Guess the Intruder.</p>
-    <button class="btn" id="goToSetup">Iniciar</button>
+  <div class="card" role="status" aria-live="polite">
+    <div class="logo" aria-hidden="true">
+      <!-- Simple emblem SVG -->
+      <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="2" width="60" height="60" rx="12" fill="url(#g)" />
+        <path d="M20 34c3-6 12-12 24-10" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.92"/>
+        <path d="M22 40c6-2 12 0 20-8" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+        <defs>
+          <linearGradient id="g" x1="0" x2="1">
+            <stop offset="0" stop-color="#8b5cf6" stop-opacity="1"/>
+            <stop offset="1" stop-color="#3b82f6" stop-opacity="1"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    </div><div class="right">
+  <div>
+    <h1>Estamos actualizando <span style="color:var(--accent)">Trickster</span></h1>
+    <p class="lead">Lo sentimos — estamos trabajando para que todo vuelva mejor que antes.</p>
   </div>
 
-  <!-- Configuración -->
-  <div id="setup" class="panel" style="display:none">
-    <h1>Configurar Partida</h1>
-    <p>Elige la cantidad de jugadores (mínimo 3):</p>
-    <input type="number" id="playerCount" min="3" value="5" style="padding:8px;font-size:16px;text-align:center;margin:10px;border-radius:6px;border:none;" />
-    
-    <p>Elige la categoría:</p>
-    <select id="modeSelect" style="padding:8px;font-size:16px;margin:10px;border-radius:6px;border:none;">
-      <option value="all">Todos</option>
-      <option value="promesas">Promesas</option>
-      <option value="jóvenes promesas">Jóvenes Promesas</option>
-      <option value="leyendas">Leyendas</option>
-      <option value="actuales">Jugadores Actuales</option>
-      <option value="entrenadores">Entrenadores</option>
-    </select>
+  <div class="status">
+    <div>
+      <div class="message">Vuelve pronto!!</div>
+      <div class="sub">Gracias por tu paciencia. Mientras tanto puedes seguirnos en nuestras redes.</div>
+    </div>
 
-    <p>Modo impostores:</p>
-    <select id="impostorMode" style="padding:8px;font-size:16px;margin:10px;border-radius:6px;border:none;">
-      <option value="exacto">Especificar cantidad</option>
-      <option value="aleatorio">Aleatorio</option>
-    </select>
-    <input type="number" id="exactImpostors" min="0" value="1" style="padding:8px;font-size:16px;text-align:center;margin:10px;border-radius:6px;border:none;" />
-
-    <br>
-    <button class="btn" id="startGame">Comenzar</button>
+    <div style="margin-left:auto">
+      <div class="pill">Mantenimiento en progreso</div>
+    </div>
   </div>
 
-  <!-- Juego -->
-  <div id="game" class="panel" style="display:none">
-    <h1>Trickster</h1>
-    <div class="nums" id="buttons"></div>
-    <div class="display">
-      <div class="player-name" id="displayName"></div>
-      <div class="player-desc" id="displayDesc"></div>
-      <div id="imgWrap"></div>
-      <div>
-        <button class="btn" id="readyBtn" style="display:none">Listo</button>
-        <button class="btn" id="skipBtn" style="display:none">Saltar Ronda</button>
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+    <div class="loader" aria-hidden="true">
+      <div class="dots">
+        <span></span><span></span><span></span>
       </div>
+      <div class="sub">Actualizando componentes…</div>
     </div>
-    <div style="text-align:center;margin-top:10px">
-      <button class="btn" id="showImpostors" style="display:none">Ver Impostores</button>
-      <button class="btn" id="playAgain" style="display:none">Jugar otro</button>
+
+    <div style="margin-left:auto;display:flex;gap:10px;align-items:center">
+      <small class="sub">© Trickster</small>
     </div>
   </div>
-
-  <!-- Post-juego -->
-  <div id="afterGame" class="panel" style="display:none">
-    <h1>¿Qué quieres hacer?</h1>
-    <button class="btn" id="continueSame">Continuar con misma configuración</button>
-    <button class="btn" id="changeSettings">Cambiar configuración</button>
-  </div>
-
-  <footer>© 2025 - Todos los derechos reservados Negroni Studios</footer>
 </div>
 
-<script>
-const playersData = {
-    "LionelMessi": {
-        desc: "1. Nacionalidad: Argentino<br>\
-2. Equipo Actual: Inter Miami (MLS)<br>\
-3. Todos Sus Equipos: Barcelona, PSG, Inter Miami<br>\
-4. Características: Extremo derecho / falso 9, regate excepcional, visión de juego, capacidad de pase y definición, precisión en tiros libres<br>\
-5. Títulos (Algunos): Copa del Mundo 2022, Copa América 2021, Champions League (4), Balón de Oro (8 veces)",
-        img: "LionelMessi",
-        category: "actuales"
-    },
-    "CristianoRonaldo": {
-        desc: "1. Nacionalidad: Portugués<br>\
-2. Equipo Actual: Al Nassr (Arabia Saudita)<br>\
-3. Todos Sus Equipos: Sporting CP, Manchester United, Real Madrid, Juventus, Al Nassr<br>\
-4. Características: Delantero, remate con ambas piernas, juego aéreo, liderazgo<br>\
-5. Títulos (Algunos): Champions League (5), Eurocopa 2016, Nations League 2019",
-        img: "CristianoRonaldo",
-        category: "actuales"
-    },
-    "KylianMbappé": {
-        desc: "1. Nacionalidad: Francés<br>\
-2. Equipo Actual: Real Madrid (LaLiga)<br>\
-3. Todos Sus Equipos: Mónaco, PSG, Real Madrid<br>\
-4. Características: Extremo/Delantero, velocidad, definición, regate<br>\
-5. Títulos (Algunos): Copa del Mundo 2018, Finalista 2022, Ligue 1 (6), Champions League 2025",
-        img: "KylianMbappé",
-        category: "actuales"
-    },
-    "ErlingHaaland": {
-        desc: "1. Nacionalidad: Noruego<br>\
-2. Equipo Actual: Manchester City (Premier League)<br>\
-3. Todos Sus Equipos: Molde, RB Salzburg, Borussia Dortmund, Manchester City<br>\
-4. Características: Delantero centro, potencia física, remate, cabezazo<br>\
-5. Títulos (Algunos): Champions League 2023, Premier League (2), FA Cup",
-        img: "ErlingHaaland",
-        category: "actuales"
-    },
-    "NeymarJr": {
-        desc: "1. Nacionalidad: Brasileño<br>\
-2. Equipo Actual: Al Hilal (Arabia Saudita)<br>\
-3. Todos Sus Equipos: Santos, Barcelona, PSG, Al Hilal<br>\
-4. Características: Extremo, regate, creatividad, asistencias<br>\
-5. Títulos (Algunos): Champions League 2015, Libertadores 2011, Copa América 2019",
-        img: "NeymarJr",
-        category: "actuales"
-    },
-    "RobertLewandowski": {
-        desc: "1. Nacionalidad: Polaco<br>\
-2. Equipo Actual: Barcelona (LaLiga)<br>\
-3. Todos Sus Equipos: Lech Poznan, Borussia Dortmund, Bayern Múnich, Barcelona<br>\
-4. Características: Delantero goleador, remate, cabezazo<br>\
-5. Títulos (Algunos): Champions League 2020, Bundesliga (x10), LaLiga 2023",
-        img: "RobertLewandowski",
-        category: "actuales"
-    },
-    "KarimBenzema": {
-        desc: "1. Nacionalidad: Francés<br>\
-2. Equipo Actual: Al Ittihad (Arabia Saudita)<br>\
-3. Todos Sus Equipos: Lyon, Real Madrid, Al Ittihad<br>\
-4. Características: Delantero, visión de juego, definición<br>\
-5. Títulos (Algunos): Champions League (5), Balón de Oro 2022",
-        img: "KarimBenzema",
-        category: "actuales"
-    },
-    "MohamedSalah": {
-        desc: "1. Nacionalidad: Egipcio<br>\
-2. Equipo Actual: Liverpool (Premier League)<br>\
-3. Todos Sus Equipos: Basilea, Chelsea, Fiorentina, Roma, Liverpool<br>\
-4. Características: Extremo derecho, velocidad, regate, remate<br>\
-5. Títulos (Algunos): Champions League 2019, Premier League 2020",
-        img: "MohamedSalah",
-        category: "actuales"
-    },
-    "KevinDeBruyne": {
-        desc: "1. Nacionalidad: Belga<br>\
-2. Equipo Actual: Manchester City (Premier League)<br>\
-3. Todos Sus Equipos: Genk, Chelsea, Wolfsburgo, Manchester City<br>\
-4. Características: Mediocampista ofensivo, pase, visión, disparo de media distancia<br>\
-5. Títulos (Algunos): Champions League 2023, Premier League (5)",
-        img: "KevinDeBruyne",
-        category: "actuales"
-    },
-    "LukaModric": {
-        desc: "1. Nacionalidad: Croata<br>\
-2. Equipo Actual: Real Madrid (LaLiga)<br>\
-3. Todos Sus Equipos: Dinamo Zagreb, Tottenham, Real Madrid<br>\
-4. Características: Mediocampista, control de juego, pase, liderazgo<br>\
-5. Títulos (Algunos): Champions League (5), Balón de Oro 2018",
-        img: "LukaModric",
-        category: "actuales"
-    },
-    "ToniKroos": {
-        desc: "1. Nacionalidad: Alemán<br>\
-2. Equipo Actual: Retirado (2024, Real Madrid)<br>\
-3. Todos Sus Equipos: Bayern Múnich, Bayer Leverkusen, Real Madrid<br>\
-4. Características: Mediocampista, precisión en pases, control<br>\
-5. Títulos (Algunos): Champions League (5), Mundial 2014",
-        img: "ToniKroos",
-        category: "leyendas"
-    },
-    "ViniciusJr": {
-        desc: "1. Nacionalidad: Brasileño<br>\
-2. Equipo Actual: Real Madrid (LaLiga)<br>\
-3. Todos Sus Equipos: Flamengo, Real Madrid<br>\
-4. Características: Extremo izquierdo, velocidad, regate, desequilibrio<br>\
-5. Títulos (Algunos): Champions League 2022, LaLiga (2)",
-        img: "ViniciusJr",
-        category: "actuales"
-    },
-    "JudeBellingham": {
-        desc: "1. Nacionalidad: Inglés<br>\
-2. Equipo Actual: Real Madrid (LaLiga)<br>\
-3. Todos Sus Equipos: Birmingham, Borussia Dortmund, Real Madrid<br>\
-4. Características: Mediocampista box-to-box, fuerza, llegada, técnica<br>\
-5. Títulos (Algunos): Champions League 2025, LaLiga 2024",
-        img: "JudeBellingham",
-        category: "actuales"
-    },
-    "RodriHernandez": {
-        desc: "1. Nacionalidad: Español<br>\
-2. Equipo Actual: Manchester City (Premier League)<br>\
-3. Todos Sus Equipos: Villarreal, Atlético Madrid, Manchester City<br>\
-4. Características: Mediocampista defensivo, control, recuperación, pase<br>\
-5. Títulos (Algunos): Champions League 2023, Eurocopa 2024",
-        img: "RodriHernandez",
-        category: "actuales"
-    },
-    "HarryKane": {
-        desc: "1. Nacionalidad: Inglés<br>\
-2. Equipo Actual: Bayern Múnich (Bundesliga)<br>\
-3. Todos Sus Equipos: Tottenham, Bayern Múnich<br>\
-4. Características: Delantero centro, remate, cabezazo, juego de espaldas<br>\
-5. Títulos (Algunos): Bundesliga 2024, Bota de Oro Premier League (3)",
-        img: "HarryKane",
-        category: "actuales"
-    },
-    "PhilFoden": {
-        desc: "1. Nacionalidad: Inglés<br>\
-2. Equipo Actual: Manchester City (Premier League)<br>\
-3. Todos Sus Equipos: Manchester City<br>\
-4. Características: Extremo/Mediocampista ofensivo, regate, pase, definición<br>\
-5. Títulos (Algunos): Champions League 2023, Premier League (4)",
-        img: "PhilFoden",
-        category: "promesas"
-    },
-    "PedriGonzalez": {
-        desc: "1. Nacionalidad: Español<br>\
-2. Equipo Actual: Barcelona (LaLiga)<br>\
-3. Todos Sus Equipos: Las Palmas, Barcelona<br>\
-4. Características: Mediocampista ofensivo, pase, regate, inteligencia táctica<br>\
-5. Títulos (Algunos): Copa del Rey 2021, Eurocopa Sub-21",
-        img: "PedriGonzalez",
-        category: "promesas"
-    },
-    "GaviPaez": {
-        desc: "1. Nacionalidad: Español<br>\
-2. Equipo Actual: Barcelona (LaLiga)<br>\
-3. Todos Sus Equipos: Barcelona<br>\
-4. Características: Mediocampista, intensidad, presión, técnica<br>\
-5. Títulos (Algunos): Nations League 2023, Copa del Rey 2021",
-        img: "GaviPaez",
-        category: "promesas"
-    },
-    "AntoineGriezmann": {
-        desc: "1. Nacionalidad: Francés<br>\
-2. Equipo Actual: Atlético de Madrid (LaLiga)<br>\
-3. Todos Sus Equipos: Real Sociedad, Atlético de Madrid, Barcelona<br>\
-4. Características: Delantero/mediapunta, visión, sacrificio, gol<br>\
-5. Títulos (Algunos): Copa del Mundo 2018, Europa League 2018",
-        img: "AntoineGriezmann",
-        category: "actuales"
-    },
-    "OusmaneDembele": {
-        desc: "1. Nacionalidad: Francés<br>\
-2. Equipo Actual: PSG (Ligue 1)<br>\
-3. Todos Sus Equipos: Rennes, Borussia Dortmund, Barcelona, PSG<br>\
-4. Características: Extremo, regate, velocidad, desequilibrio<br>\
-5. Títulos (Algunos): Mundial 2018, Ligue 1, LaLiga",
-        img: "OusmaneDembele",
-        category: "actuales"
-    },
-   "RafaelLeao": {
-       desc: "1. Nacionalidad: Portugués<br>\
-2. Equipo Actual: AC Milan<br>\
-3. Todos Sus Equipos: Sporting CP, Lille, AC Milan<br>\
-4. Características: Extremo veloz, gran regate, potencia física, definición en carrera<br>\
-5. Títulos (Algunos): Serie A 2022, Supercopa de Italia",
-       img: "RafaelLeao",
-       category: "actuales"
-   },
-   "MarcusRashford": {
-       desc: "1. Nacionalidad: Inglés<br>\
-2. Equipo Actual: Manchester United<br>\
-3. Todos Sus Equipos: Manchester United<br>\
-4. Características: Extremo/Delantero, velocidad, disparo potente, solidario en defensa<br>\
-5. Títulos (Algunos): Europa League 2017, FA Cup 2016, Copa de la Liga 2023",
-       img: "MarcusRashford",
-       category: "actuales"
-   },
-   "JadonSancho": {
-       desc: "1. Nacionalidad: Inglés<br>\
-2. Equipo Actual: Manchester United (cedido al Borussia Dortmund en 2024)<br>\
-3. Todos Sus Equipos: Manchester City (juveniles), Borussia Dortmund, Manchester United<br>\
-4. Características: Extremo con gran técnica, regate, creatividad y visión de pase<br>\
-5. Títulos (Algunos): Copa de Alemania 2021, Carabao Cup 2023",
-       img: "JadonSancho",
-       category: "actuales"
-   },
-   "BukayoSaka": {
-       desc: "1. Nacionalidad: Inglés<br>\
-2. Equipo Actual: Arsenal<br>\
-3. Todos Sus Equipos: Arsenal<br>\
-4. Características: Extremo derecho, rapidez, dribbling, definición precisa, consistencia<br>\
-5. Títulos (Algunos): Community Shield 2020/2023, subcampeón Premier League 2023",
-       img: "BukayoSaka",
-       category: "actuales"
-   },
-   "JackGrealish": {
-       desc: "1. Nacionalidad: Inglés<br>\
-2. Equipo Actual: Manchester City<br>\
-3. Todos Sus Equipos: Aston Villa, Manchester City<br>\
-4. Características: Mediocampista ofensivo/extremo, conducción de balón, visión, control<br>\
-5. Títulos (Algunos): Premier League 2022/23/24, Champions League 2023",
-       img: "JackGrealish",
-       category: "actuales"
-   },
-   "DeclanRice": {
-       desc: "1. Nacionalidad: Inglés<br>\
-2. Equipo Actual: Arsenal<br>\
-3. Todos Sus Equipos: West Ham United, Arsenal<br>\
-4. Características: Mediocentro defensivo, recuperación, liderazgo, pase largo<br>\
-5. Títulos (Algunos): Conference League 2023, Community Shield 2023",
-       img: "DeclanRice",
-       category: "actuales"
-   },
-   "BrunoFernandes": {
-       desc: "1. Nacionalidad: Portugués<br>\
-2. Equipo Actual: Manchester United<br>\
-3. Todos Sus Equipos: Udinese, Sampdoria, Sporting CP, Manchester United<br>\
-4. Características: Mediocampista ofensivo, llegada al área, visión de pase, gran pegada<br>\
-5. Títulos (Algunos): Europa League 2017, Copa de la Liga 2023",
-       img: "BrunoFernandes",
-       category: "actuales"
-   },
-   "CasemiroHenrique": {
-       desc: "1. Nacionalidad: Brasileño<br>\
-2. Equipo Actual: Manchester United<br>\
-3. Todos Sus Equipos: São Paulo, Real Madrid, Porto, Manchester United<br>\
-4. Características: Mediocentro defensivo, fuerza, liderazgo, especialista en interceptar<br>\
-5. Títulos (Algunos): 5x Champions League, Copa América 2019, LaLiga 3 veces",
-       img: "CasemiroHenrique",
-       category: "actuales"
-   },
-   "AlejandroGarnacho": {
-       desc: "1. Nacionalidad: Argentino<br>\
-2. Equipo Actual: Manchester United<br>\
-3. Todos Sus Equipos: Atlético Madrid (juvenil), Manchester United<br>\
-4. Características: Extremo izquierdo, velocidad, regate, atrevimiento ofensivo<br>\
-5. Títulos (Algunos): Copa de la Liga 2023, Copa América 2024",
-       img: "AlejandroGarnacho",
-       category: "actuales"
-   },
-   "JulianAlvarez": {
-       desc: "1. Nacionalidad: Argentino<br>\
-2. Equipo Actual: Manchester City<br>\
-3. Todos Sus Equipos: River Plate, Manchester City<br>\
-4. Características: Delantero versátil, presión alta, movilidad y definición<br>\
-5. Títulos (Algunos): Copa del Mundo 2022, Copa América 2021, Champions League 2023",
-       img: "JulianAlvarez",
-       category: "actuales"
-   },
-   "LautaroMartinez": {
-       desc: "1. Nacionalidad: Argentino<br>\
-2. Equipo Actual: Inter de Milán<br>\
-3. Todos Sus Equipos: Racing Club, Inter de Milán<br>\
-4. Características: Delantero centro, movilidad, cabezazo, presión constante<br>\
-5. Títulos (Algunos): Serie A 2021, Copa del Mundo 2022, Copa América 2021",
-       img: "LautaroMartinez",
-       category: "actuales"
-   },
-   "PauloDybala": {
-       desc: "1. Nacionalidad: Argentino<br>\
-2. Equipo Actual: AS Roma<br>\
-3. Todos Sus Equipos: Instituto de Córdoba, Palermo, Juventus, AS Roma<br>\
-4. Características: Delantero/mediapunta, zurda exquisita, regate y disparo preciso<br>\
-5. Títulos (Algunos): 5x Serie A, Copa América 2021, Copa del Mundo 2022",
-       img: "PauloDybala",
-       category: "actuales"
-   },
-   "AngelDiMaria": {
-       desc: "1. Nacionalidad: Argentino<br>\
-2. Equipo Actual: Benfica (2024, último club europeo, planea retiro en Rosario Central)<br>\
-3. Todos Sus Equipos: Rosario Central, Benfica, Real Madrid, Manchester United, PSG, Juventus<br>\
-4. Características: Extremo creativo, gran centro, regate, pegada<br>\
-5. Títulos (Algunos): Copa del Mundo 2022, Champions League 2014, Copa América 2021/24",
-       img: "AngelDiMaria",
-       category: "actuales"
-   },
-   "AlexisMacAllister": {
-       desc: "1. Nacionalidad: Argentino<br>\
-2. Equipo Actual: Liverpool<br>\
-3. Todos Sus Equipos: Argentinos Juniors, Boca Juniors, Brighton, Liverpool<br>\
-4. Características: Mediocampista mixto, visión de juego, técnica depurada<br>\
-5. Títulos (Algunos): Copa del Mundo 2022, Carabao Cup 2024",
-       img: "AlexisMacAllister",
-       category: "actuales"
-   },
-   "EnzoFernandez": {
-       desc: "1. Nacionalidad: Argentino<br>\
-2. Equipo Actual: Chelsea<br>\
-3. Todos Sus Equipos: River Plate, Defensa y Justicia, Benfica, Chelsea<br>\
-4. Características: Mediocampista central, gran pase, visión de juego<br>\
-5. Títulos (Algunos): Copa del Mundo 2022 (Mejor Joven), Liga Portugal 2022",
-       img: "EnzoFernandez",
-       category: "actuales"
-   },
-   "RodrigoDePaul": {
-       desc: "1. Nacionalidad: Argentino<br>\
-2. Equipo Actual: Atlético de Madrid<br>\
-3. Todos Sus Equipos: Racing Club, Valencia, Udinese, Atlético de Madrid<br>\
-4. Características: Mediocampista todoterreno, entrega, pase entre líneas<br>\
-5. Títulos (Algunos): Copa del Mundo 2022, Copa América 2021",
-       img: "RodrigoDePaul",
-       category: "actuales"
-   },
-   "LeandroParedes": {
-       desc: "1. Nacionalidad: Argentino<br>\
-2. Equipo Actual: AS Roma<br>\
-3. Todos Sus Equipos: Boca Juniors, Roma, Empoli, PSG, Juventus, Galatasaray, Zenit<br>\
-4. Características: Mediocentro defensivo, distribución de balón, disparos de larga distancia<br>\
-5. Títulos (Algunos): Copa del Mundo 2022, Ligue 1 con PSG",
-       img: "LeandroParedes",
-       category: "actuales"
-   },
-   "LisandroMartinez": {
-       desc: "1. Nacionalidad: Argentino<br>\
-2. Equipo Actual: Manchester United<br>\
-3. Todos Sus Equipos: Newell’s, Defensa y Justicia, Ajax, Manchester United<br>\
-4. Características: Defensa central, agresivo, buena salida con el balón, liderazgo<br>\
-5. Títulos (Algunos): Copa del Mundo 2022, Copa América 2021, Eredivisie 2021",
-       img: "LisandroMartinez",
-       category: "actuales"
-   },
-   "CristianRomero": {
-       desc: "1. Nacionalidad: Argentino<br>\
-2. Equipo Actual: Tottenham Hotspur<br>\
-3. Todos Sus Equipos: Belgrano, Genoa, Atalanta, Juventus, Tottenham<br>\
-4. Características: Defensa central, agresivo, buen juego aéreo, anticipación<br>\
-5. Títulos (Algunos): Copa del Mundo 2022, Copa América 2021",
-       img: "CristianRomero",
-       category: "actuales"
-   },
-   "EmilianoMartinez": {
-       desc: "1. Nacionalidad: Argentino<br>\
-2. Equipo Actual: Aston Villa<br>\
-3. Todos Sus Equipos: Arsenal, Getafe, Reading, Sheffield Wednesday, Aston Villa<br>\
-4. Características: Arquero, especialista en penales, reflejos rápidos, liderazgo<br>\
-5. Títulos (Algunos): Copa del Mundo 2022 (Guante de Oro), Copa América 2021",
-       img: "EmilianoMartinez",
-       category: "actuales"
-   },
-   "ThiagoSilva": {
-       desc: "1. Nacionalidad: Brasileño<br>\
-2. Equipo Actual: Fluminense (2024, tras salir del Chelsea)<br>\
-3. Todos Sus Equipos: RS Futebol, Juventude, Porto, Fluminense, Milan, PSG, Chelsea<br>\
-4. Características: Defensa central, liderazgo, anticipación, salida limpia<br>\
-5. Títulos (Algunos): Champions League 2021, Copa América 2019, Ligue 1 múltiples",
-       img: "ThiagoSilva",
-       category: "actuales"
-   },
-   "MarquinhosCorrea": {
-       desc: "1. Nacionalidad: Brasileño<br>\
-2. Equipo Actual: PSG<br>\
-3. Todos Sus Equipos: Corinthians, Roma, PSG<br>\
-4. Características: Defensa central/mediocentro, polivalente, liderazgo, rapidez<br>\
-5. Títulos (Algunos): Copa América 2019, múltiples Ligue 1, Copa de Francia",
-       img: "MarquinhosCorrea",
-       category: "actuales"
-   },
-   "GabrielJesus": {
-       desc: "1. Nacionalidad: Brasileño<br>\
-2. Equipo Actual: Arsenal<br>\
-3. Todos Sus Equipos: Palmeiras, Manchester City, Arsenal<br>\
-4. Características: Delantero centro/segundo punta, movilidad, presión alta, definición<br>\
-5. Títulos (Algunos): Copa América 2019, Premier League 4 veces, FA Cup",
-       img: "GabrielJesus",
-       category: "actuales"
-   },
-   "GabrielMartinelli": {
-       desc: "1. Nacionalidad: Brasileño<br>\
-2. Equipo Actual: Arsenal<br>\
-3. Todos Sus Equipos: Ituano, Arsenal<br>\
-4. Características: Extremo izquierdo, velocidad, regate, intensidad<br>\
-5. Títulos (Algunos): Community Shield 2023, subcampeón Premier League 2023",
-       img: "GabrielMartinelli",
-       category: "actuales"
-   },
-   "RicharlisonDeAndrade": {
-       desc: "1. Nacionalidad: Brasileño<br>\
-2. Equipo Actual: Tottenham Hotspur<br>\
-3. Todos Sus Equipos: América Mineiro, Fluminense, Watford, Everton, Tottenham<br>\
-4. Características: Delantero centro/extremo, potencia física, juego aéreo, entrega<br>\
-5. Títulos (Algunos): Copa América 2019, Juegos Olímpicos 2021",
-       img: "RicharlisonDeAndrade",
-       category: "actuales"
-   },
-   "AlissonBecker": {
-       desc: "1. Nacionalidad: Brasileño<br>\
-2. Equipo Actual: Liverpool<br>\
-3. Todos Sus Equipos: Internacional, Roma, Liverpool<br>\
-4. Características: Arquero, reflejos, juego aéreo, buen pie<br>\
-5. Títulos (Algunos): Champions League 2019, Premier League 2020, Copa América 2019",
-       img: "AlissonBecker",
-       category: "actuales"
-   },
-   "EdersonMoraes": {
-       desc: "1. Nacionalidad: Brasileño<br>\
-2. Equipo Actual: Manchester City<br>\
-3. Todos Sus Equipos: Benfica, Manchester City<br>\
-4. Características: Arquero, juego con los pies, precisión en pases largos, reflejos<br>\
-5. Títulos (Algunos): Champions League 2023, Premier League múltiples, Copa América 2019",
-       img: "EdersonMoraes",
-       category: "actuales"
-   },
-   "JoaoCancelo": {
-       desc: "1. Nacionalidad: Portugués<br>\
-2. Equipo Actual: Barcelona (cedido por Manchester City)<br>\
-3. Todos Sus Equipos: Benfica, Valencia, Inter, Juventus, Manchester City, Bayern, Barcelona<br>\
-4. Características: Lateral derecho/izquierdo, ofensivo, regate, centro preciso<br>\
-5. Títulos (Algunos): Premier League 3 veces, Serie A 2019, Nations League 2019",
-       img: "JoaoCancelo",
-       category: "actuales"
-   },
-   "BernardoSilva": {
-       desc: "1. Nacionalidad: Portugués<br>\
-2. Equipo Actual: Manchester City<br>\
-3. Todos Sus Equipos: Benfica, Monaco, Manchester City<br>\
-4. Características: Mediocampista ofensivo/extremo, visión, control, técnica depurada<br>\
-5. Títulos (Algunos): Champions League 2023, Premier League múltiples, Nations League 2019",
-       img: "BernardoSilva",
-       category: "actuales"
-   },
-   "RubenDias": {
-       desc: "1. Nacionalidad: Portugués<br>\
-2. Equipo Actual: Manchester City<br>\
-3. Todos Sus Equipos: Benfica, Manchester City<br>\
-4. Características: Defensa central, solidez, liderazgo, juego aéreo<br>\
-5. Títulos (Algunos): Champions League 2023, Premier League múltiples, Nations League 2019",
-       img: "RubenDias",
-       category: "actuales"
-   },
-   "JoaoFelix": {
-       desc: "1. Nacionalidad: Portugués<br>\
-2. Equipo Actual: Barcelona (cedido por Atlético Madrid)<br>\
-3. Todos Sus Equipos: Benfica, Atlético Madrid, Chelsea, Barcelona<br>\
-4. Características: Delantero/mediapunta, técnica, movilidad, visión de pase<br>\
-5. Títulos (Algunos): Nations League 2019, LaLiga 2021",
-       img: "JoaoFelix",
-       category: "actuales"
-   },
-   "RaphinhaBelloli": {
-       desc: "1. Nacionalidad: Brasileño<br>\
-2. Equipo Actual: Barcelona<br>\
-3. Todos Sus Equipos: Vitória Guimarães, Sporting CP, Rennes, Leeds United, Barcelona<br>\
-4. Características: Extremo derecho, regate, velocidad, golpeo<br>\
-5. Títulos (Algunos): LaLiga 2023, Copa América 2021",
-       img: "RaphinhaBelloli",
-       category: "actuales"
-   },
-   "FedericoValverde": {
-       desc: "1. Nacionalidad: Uruguayo<br>\
-2. Equipo Actual: Real Madrid<br>\
-3. Todos Sus Equipos: Peñarol, Deportivo La Coruña, Real Madrid<br>\
-4. Características: Mediocampista box-to-box, resistencia, disparo lejano, polivalencia<br>\
-5. Títulos (Algunos): Champions League 2022, Liga 2020/22, Copa del Mundo Sub-20 finalista",
-       img: "FedericoValverde",
-       category: "actuales"
-   },
-   "FedericoChiesa": {
-       desc: "1. Nacionalidad: Italiano<br>\
-2. Equipo Actual: Juventus<br>\
-3. Todos Sus Equipos: Fiorentina, Juventus<br>\
-4. Características: Extremo derecho/izquierdo, velocidad, regate, disparo<br>\
-5. Títulos (Algunos): Eurocopa 2020, Coppa Italia 2021",
-       img: "FedericoChiesa",
-       category: "actuales"
-   },
-   "NicoloBarella": {
-       desc: "1. Nacionalidad: Italiano<br>\
-2. Equipo Actual: Inter de Milán<br>\
-3. Todos Sus Equipos: Cagliari, Inter de Milán<br>\
-4. Características: Mediocampista, intensidad, distribución, llegada al área<br>\
-5. Títulos (Algunos): Serie A 2021, Eurocopa 2020",
-       img: "NicoloBarella",
-       category: "actuales"
-   },
-   "SandroTonali": {
-       desc: "1. Nacionalidad: Italiano<br>\
-2. Equipo Actual: Newcastle United<br>\
-3. Todos Sus Equipos: Brescia, AC Milan, Newcastle<br>\
-4. Características: Mediocentro, visión de juego, pases largos, intensidad<br>\
-5. Títulos (Algunos): Serie A 2022",
-       img: "SandroTonali",
-       category: "actuales"
-   },
-   "JorginhoFrello": {
-       desc: "1. Nacionalidad: Italiano<br>\
-2. Equipo Actual: Arsenal<br>\
-3. Todos Sus Equipos: Verona, Napoli, Chelsea, Arsenal<br>\
-4. Características: Mediocentro, control de juego, pases cortos, penales seguros<br>\
-5. Títulos (Algunos): Champions League 2021, Eurocopa 2020",
-       img: "JorginhoFrello",
-       category: "actuales"
-   },
-   "GianluigiDonnarumma": {
-       desc: "1. Nacionalidad: Italiano<br>\
-2. Equipo Actual: PSG<br>\
-3. Todos Sus Equipos: AC Milan, PSG<br>\
-4. Características: Arquero, reflejos, juego aéreo, seguridad bajo palos<br>\
-5. Títulos (Algunos): Eurocopa 2020 (Mejor Jugador), Ligue 1",
-       img: "GianluigiDonnarumma",
-       category: "actuales"
-   },
-   "AlessandroBastoni": {
-       desc: "1. Nacionalidad: Italiano<br>\
-2. Equipo Actual: Inter de Milán<br>\
-3. Todos Sus Equipos: Atalanta, Parma, Inter de Milán<br>\
-4. Características: Defensa central zurdo, salida limpia, juego aéreo, posicionamiento<br>\
-5. Títulos (Algunos): Serie A 2021, Eurocopa 2020",
-       img: "AlessandroBastoni",
-       category: "actuales"
-   },
-   "DomenicoBerardi": {
-       desc: "1. Nacionalidad: Italiano<br>\
-2. Equipo Actual: Sassuolo<br>\
-3. Todos Sus Equipos: Sassuolo, Juventus (no debutó), Sassuolo<br>\
-4. Características: Extremo derecho, disparo potente, regate, constancia<br>\
-5. Títulos (Algunos): Eurocopa 2020",
-       img: "DomenicoBerardi",
-       category: "actuales"
-   },
-  "CiroImmobile": {
-    desc: "1. Nacionalidad: Italiano<br>\
-2. Equipo Actual: Lazio<br>\
-3. Todos Sus Equipos: Lazio, Torino, Borussia Dortmund, Juventus, Manchester City<br>\
-4. Características: Delantero goleador, gran definición y remate potente<br>\
-5. Títulos (Algunos): Serie A, Coppa Italia, Capocannoniere",
-    img: "CiroImmobile",
-    category: "actuales"
-  },
-  "ManuelLocatelli": {
-    desc: "1. Nacionalidad: Italiano<br>\
-2. Equipo Actual: Juventus<br>\
-3. Todos Sus Equipos: AC Milan, Sassuolo, Juventus<br>\
-4. Características: Centrocampista defensivo, pase preciso, gran visión de juego<br>\
-5. Títulos (Algunos): Coppa Italia",
-    img: "ManuelLocatelli",
-    category: "actuales"
-  },
-  "MatthijsDeLigt": {
-    desc: "1. Nacionalidad: Neerlandés<br>\
-2. Equipo Actual: Bayern Munich<br>\
-3. Todos Sus Equipos: Ajax, Juventus, Bayern Munich<br>\
-4. Características: Defensa central sólido, gran anticipación y juego aéreo<br>\
-5. Títulos (Algunos): Eredivisie, Serie A",
-    img: "MatthijsDeLigt",
-    category: "actuales"
-  },
-  "FrenkieDeJong": {
-    desc: "1. Nacionalidad: Neerlandés<br>\
-2. Equipo Actual: Barcelona<br>\
-3. Todos Sus Equipos: Ajax, Barcelona<br>\
-4. Características: Centrocampista polivalente, gran control de balón, pase y visión<br>\
-5. Títulos (Algunos): LaLiga, Copa del Rey",
-    img: "FrenkieDeJong",
-    category: "actuales"
-  },
-  "MemphisDepay": {
-    desc: "1. Nacionalidad: Neerlandés<br>\
-2. Equipo Actual: Atlético de Madrid<br>\
-3. Todos Sus Equipos: PSV, Lyon, Barcelona, Manchester United, Atlético de Madrid<br>\
-4. Características: Extremo rápido, regate y gran capacidad goleadora<br>\
-5. Títulos (Algunos): Ligue 1, Eredivisie",
-    img: "MemphisDepay",
-    category: "actuales"
-  },
-  "VirgilVanDijk": {
-    desc: "1. Nacionalidad: Neerlandés<br>\
-2. Equipo Actual: Liverpool<br>\
-3. Todos Sus Equipos: Groningen, Celtic, Southampton, Liverpool<br>\
-4. Características: Defensa central dominante, juego aéreo, liderazgo<br>\
-5. Títulos (Algunos): Premier League, Champions League",
-    img: "VirgilVanDijk",
-    category: "actuales"
-  },
-  "CodyGakpo": {
-    desc: "1. Nacionalidad: Neerlandés<br>\
-2. Equipo Actual: PSV Eindhoven / Liverpool<br>\
-3. Todos Sus Equipos: PSV Eindhoven, Liverpool<br>\
-4. Características: Extremo rápido, potente y goleador<br>\
-5. Títulos (Algunos): Eredivisie",
-    img: "CodyGakpo",
-    category: "actuales"
-  },
-  "GeorginioWijnaldum": {
-    desc: "1. Nacionalidad: Neerlandés<br>\
-2. Equipo Actual: Roma<br>\
-3. Todos Sus Equipos: Feyenoord, PSV, Liverpool, PSG, Roma<br>\
-4. Características: Centrocampista completo, llegada al área y resistencia física<br>\
-5. Títulos (Algunos): Premier League, Champions League, Ligue 1",
-    img: "GeorginioWijnaldum",
-    category: "actuales"
-  },
-  "DenzelDumfries": {
-    desc: "1. Nacionalidad: Neerlandés<br>\
-2. Equipo Actual: Inter de Milán<br>\
-3. Todos Sus Equipos: Sparta Rotterdam, PSV, Inter de Milán<br>\
-4. Características: Lateral derecho ofensivo, velocidad y potencia física<br>\
-5. Títulos (Algunos): Serie A",
-    img: "DenzelDumfries",
-    category: "actuales"
-  },
-  "StevenBergwijn": {
-    desc: "1. Nacionalidad: Neerlandés<br>\
-2. Equipo Actual: Ajax<br>\
-3. Todos Sus Equipos: PSV, Tottenham, Ajax<br>\
-4. Características: Extremo veloz, regate y capacidad de finalización<br>\
-5. Títulos (Algunos): Eredivisie",
-    img: "StevenBergwijn",
-    category: "actuales"
-  },
-  "ChristianEriksen": {
-    desc: "1. Nacionalidad: Danés<br>\
-2. Equipo Actual: Manchester United<br>\
-3. Todos Sus Equipos: Ajax, Tottenham, Inter, Brentford, Manchester United<br>\
-4. Características: Centrocampista creativo, precisión en pases y tiros libres<br>\
-5. Títulos (Algunos): Serie A, Premier League",
-    img: "ChristianEriksen",
-    category: "actuales"
-  },
-  "RasmusHojlund": {
-    desc: "1. Nacionalidad: Danés<br>\
-2. Equipo Actual: Manchester United<br>\
-3. Todos Sus Equipos: Rødovre, FC Copenhagen, Atalanta, Manchester United<br>\
-4. Características: Delantero joven y potente, gran capacidad goleadora<br>\
-5. Títulos (Algunos): Serie A",
-    img: "RasmusHojlund",
-    category: "actuales"
-  },
-  "PierreEmerickAubameyang": {
-    desc: "1. Nacionalidad: Gabonés<br>\
-2. Equipo Actual: Olympique de Marsella<br>\
-3. Todos Sus Equipos: AC Milan, Saint-Étienne, Borussia Dortmund, Arsenal, Barcelona, Chelsea, Olympique de Marsella<br>\
-4. Características: Delantero rápido, excelente definición y posicionamiento<br>\
-5. Títulos (Algunos): Bundesliga, Copa del Rey",
-    img: "PierreEmerickAubameyang",
-    category: "actuales"
-  },
-  "EdinDzeko": {
-    desc: "1. Nacionalidad: Bosnio<br>\
-2. Equipo Actual: Inter de Milán<br>\
-3. Todos Sus Equipos: Željezničar, Wolfsburgo, Manchester City, Roma, Inter de Milán<br>\
-4. Características: Delantero centro, gran físico, remate aéreo y goleador constante<br>\
-5. Títulos (Algunos): Premier League, Serie A, Bundesliga",
-    img: "EdinDzeko",
-    category: "actuales"
-  },
-  "RomeluLukaku": {
-    desc: "1. Nacionalidad: Belga<br>\
-2. Equipo Actual: Inter de Milán<br>\
-3. Todos Sus Equipos: Anderlecht, Chelsea, Everton, Manchester United, Inter de Milán<br>\
-4. Características: Delantero fuerte, gran definición, potente remate y juego de espaldas<br>\
-5. Títulos (Algunos): Serie A, Premier League",
-    img: "RomeluLukaku",
-    category: "actuales"
-  },
-  "TammyAbraham": {
-    desc: "1. Nacionalidad: Inglés<br>\
-2. Equipo Actual: AS Roma<br>\
-3. Todos Sus Equipos: Chelsea, Aston Villa, AS Roma<br>\
-4. Características: Delantero centro, gran capacidad goleadora y buen remate<br>\
-5. Títulos (Algunos): Serie A",
-    img: "TammyAbraham",
-    category: "actuales"
-  },
-  "MasonMount": {
-    desc: "1. Nacionalidad: Inglés<br>\
-2. Equipo Actual: Manchester United<br>\
-3. Todos Sus Equipos: Chelsea, Manchester United<br>\
-4. Características: Centrocampista ofensivo, gran visión y precisión en pases<br>\
-5. Títulos (Algunos): Premier League, Champions League",
-    img: "MasonMount",
-    category: "actuales"
-  },
-  "KaiHavertz": {
-    desc: "1. Nacionalidad: Alemán<br>\
-2. Equipo Actual: Chelsea<br>\
-3. Todos Sus Equipos: Bayer Leverkusen, Chelsea<br>\
-4. Características: Centrocampista ofensivo / delantero, versátil y goleador<br>\
-5. Títulos (Algunos): Champions League",
-    img: "KaiHavertz",
-    category: "actuales"
-  },
-  "LeroySane": {
-    desc: "1. Nacionalidad: Alemán<br>\
-2. Equipo Actual: Bayern Munich<br>\
-3. Todos Sus Equipos: Schalke, Manchester City, Bayern Munich<br>\
-4. Características: Extremo veloz, regate y capacidad goleadora<br>\
-5. Títulos (Algunos): Premier League, Bundesliga",
-    img: "LeroySane",
-    category: "actuales"
-  },
-  "SergeGnabry": {
-    desc: "1. Nacionalidad: Alemán<br>\
-2. Equipo Actual: Bayern Munich<br>\
-3. Todos Sus Equipos: Arsenal, Werder Bremen, Bayern Munich<br>\
-4. Características: Extremo rápido, regate y precisión en tiros<br>\
-5. Títulos (Algunos): Bundesliga, Champions League",
-    img: "SergeGnabry",
-    category: "actuales"
-  }
-};
-
-// --- Juego ---
-let chosenPlayer=""; let impostorPositions=new Set(); let totalPlayers=0; let playerDeck=[]; 
-let currentSettings={playerCount:5, mode:"all", impostorMode:"exacto", impostorCount:1};
-
-const startScreen=document.getElementById("startScreen");
-const setupDiv=document.getElementById("setup");
-const gameDiv=document.getElementById("game");
-const buttonsDiv=document.getElementById("buttons");
-const displayName=document.getElementById("displayName");
-const displayDesc=document.getElementById("displayDesc");
-const imgWrap=document.getElementById("imgWrap");
-const readyBtn=document.getElementById("readyBtn");
-const playAgainBtn=document.getElementById("playAgain");
-const showImpostorsBtn=document.getElementById("showImpostors");
-const skipBtn=document.getElementById("skipBtn");
-const afterGameDiv=document.getElementById("afterGame");
-const continueSameBtn=document.getElementById("continueSame");
-const changeSettingsBtn=document.getElementById("changeSettings");
-const playerCountInput=document.getElementById("playerCount");
-const modeSelect=document.getElementById("modeSelect");
-const impostorModeSelect=document.getElementById("impostorMode");
-const exactImpostorsInput=document.getElementById("exactImpostors");
-
-// Config impostor
-impostorModeSelect.addEventListener("change",()=>{
-  if(impostorModeSelect.value==="aleatorio"){ exactImpostorsInput.disabled=true; exactImpostorsInput.style.opacity=0.5; }
-  else { exactImpostorsInput.disabled=false; exactImpostorsInput.style.opacity=1; }
-});
-
-// Navegación
-document.getElementById("goToSetup").addEventListener("click",()=>{ startScreen.style.display="none"; setupDiv.style.display="block"; });
-
-document.getElementById("startGame").addEventListener("click",()=>{
-  const count=parseInt(playerCountInput.value,10);
-  if(isNaN(count)||count<3){ alert("Debes elegir al menos 3 jugadores."); return; }
-  totalPlayers=count;
-  currentSettings={ playerCount:count, mode:modeSelect.value, impostorMode:impostorModeSelect.value, impostorCount:parseInt(exactImpostorsInput.value,10)};
-  generatePlayerDeck(); startNewGame();
-  setupDiv.style.display="none"; gameDiv.style.display="block";
-});
-
-// Generar baraja
-function generatePlayerDeck(){
-  playerDeck=Object.keys(playersData).filter(n=>{
-    const cat=playersData[n].category;
-    return currentSettings.mode==="all"||cat===currentSettings.mode;
-  });
-  shuffleDeck(playerDeck);
-}
-function shuffleDeck(deck){ for(let i=deck.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [deck[i],deck[j]]=[deck[j],deck[i]]; } }
-function drawPlayer(){ if(playerDeck.length===0) generatePlayerDeck(); return playerDeck.pop(); }
-function getRandomImpostors(total){ return Math.floor(Math.random()*(total+1)); }
-
-function startNewGame(){
-  chosenPlayer=drawPlayer(); impostorPositions.clear();
-  let impostorCount=currentSettings.impostorCount;
-  if(currentSettings.impostorMode==="aleatorio") impostorCount=getRandomImpostors(totalPlayers);
-  while(impostorPositions.size<impostorCount){ impostorPositions.add(Math.floor(Math.random()*totalPlayers)+1); }
-
-  buttonsDiv.innerHTML="";
-  for(let i=1;i<=totalPlayers;i++){ const b=document.createElement("button"); b.textContent=i; b.className="num-btn"; b.addEventListener("click",()=>revealNumber(i,b)); buttonsDiv.appendChild(b); }
-
-  displayName.textContent=""; displayDesc.innerHTML=""; imgWrap.innerHTML="";
-  readyBtn.style.display="none"; skipBtn.style.display="inline-block"; playAgainBtn.style.display="none"; showImpostorsBtn.style.display="none";
-}
-
-// Mostrar imagen
-function loadPlayerImage(name,onSuccess,onFail){
-  const tryExt=(ext)=>{ const img=new Image(); img.className="player-image";
-    img.onload=()=>onSuccess(img); img.onerror=()=>{ if(ext==".jpg")tryExt(".png"); else onFail(); }; img.src="Jugadores/"+name+ext; };
-  tryExt(".jpg");
-}
-function showPlaceholder(text){ const d=document.createElement("div"); d.className="img-placeholder"; d.textContent=text; return d; }
-
-// Revelar
-function revealNumber(num,btn){
-  btn.disabled=true; displayName.textContent=""; displayDesc.innerHTML=""; imgWrap.innerHTML="";
-  if(impostorPositions.has(num)){
-    displayName.textContent="IMPOSTOR"; displayDesc.textContent="Mantente en secreto... ¡Engaña a todos!";
-    loadPlayerImage("Impostor",(img)=>imgWrap.appendChild(img),()=>imgWrap.appendChild(showPlaceholder("Impostor")));
-  } else {
-    displayName.textContent=chosenPlayer;
-    const data=playersData[chosenPlayer];
-    displayDesc.innerHTML=data.desc; // Aquí usamos innerHTML para que se vean los <br>
-    loadPlayerImage(data.img,(img)=>imgWrap.appendChild(img),()=>imgWrap.appendChild(showPlaceholder("Sin imagen")));
-  }
-  readyBtn.style.display="inline-block"; readyBtn.onclick=()=>{ nextRound(); };
-}
-function nextRound(){ displayName.textContent=""; displayDesc.innerHTML=""; imgWrap.innerHTML=""; readyBtn.style.display="none"; skipBtn.style.display="none"; playAgainBtn.style.display="inline-block"; showImpostorsBtn.style.display="inline-block"; }
-
-skipBtn.addEventListener("click",()=>{ nextRound(); });
-showImpostorsBtn.addEventListener("click",()=>{
-  displayName.textContent="Los impostores eran:"; displayDesc.innerHTML=""; imgWrap.innerHTML="";
-  impostorPositions.forEach(num=>{ const p=document.createElement("div"); p.textContent="Jugador "+num+" (Impostor)"; imgWrap.appendChild(p); });
-  const data=playersData[chosenPlayer]; const info=document.createElement("div"); info.style.marginTop="15px"; info.innerHTML="<strong>El jugador real era:</strong> "+chosenPlayer; imgWrap.appendChild(info);
-  loadPlayerImage(data.img,(img)=>imgWrap.appendChild(img),()=>imgWrap.appendChild(showPlaceholder("Sin imagen")));
-});
-
-playAgainBtn.addEventListener("click",()=>{ gameDiv.style.display="none"; afterGameDiv.style.display="block"; });
-continueSameBtn.addEventListener("click",()=>{ afterGameDiv.style.display="none"; generatePlayerDeck(); startNewGame(); gameDiv.style.display="block"; });
-changeSettingsBtn.addEventListener("click",()=>{ afterGameDiv.style.display="none"; setupDiv.style.display="block"; });
-</script>
+  </div>  <div class="corner">Trickster</div>
 </body>
 </html>
